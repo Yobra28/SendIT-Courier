@@ -1,0 +1,191 @@
+<nav class="user-navbar">
+  <div class="navbar-left">
+    <span class="logo">
+      <span class="material-icons">inventory_2</span>
+      <span class="brand">SendIT</span>
+    </span>
+  </div>
+  <div class="navbar-right">
+    <button class="icon-btn notification-btn" aria-label="Notifications" (click)="toggleNotifications()">
+      <span class="material-icons">notifications_none</span>
+      <span class="notification-dot" *ngIf="hasUnreadNotifications"></span>
+    </button>
+    <button class="icon-btn" aria-label="Settings" (click)="openSettings()">
+      <span class="material-icons">settings</span>
+    </button>
+    <button class="icon-btn" aria-label="Profile" (click)="openProfile()">
+      <span class="material-icons">person</span>
+      <span>Profile</span>
+    </button>
+    <button class="icon-btn" aria-label="Logout" (click)="logout()">
+      <span class="material-icons">logout</span>
+      <span>Logout</span>
+    </button>
+  </div>
+
+  <!-- Notification Modal -->
+  <div class="notification-modal" *ngIf="showNotifications">
+    <div class="modal-header">
+      <span class="modal-title">Notifications</span>
+      <span class="modal-count" *ngIf="notificationUnreadCount > 0">{{ notificationUnreadCount }}</span>
+      <button class="modal-close" (click)="closeNotifications()" aria-label="Close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngFor="let n of notifications" class="notification-item" [ngClass]="{'unread': n.unread}">
+        <span class="notif-icon" [ngClass]="n.type">
+          <span class="material-icons">
+            {{ n.type === 'delivered' ? 'check_circle' : n.type === 'in_transit' ? 'inventory_2' : n.type === 'delayed' ? 'error' : 'add_circle' }}
+          </span>
+        </span>
+        <div class="notif-content">
+          <div class="notif-title">{{ n.title }}</div>
+          <div class="notif-message">{{ n.message }}</div>
+          <div class="notif-time" *ngIf="n.time">{{ n.time }}</div>
+        </div>
+        <span class="notif-dot" *ngIf="n.unread"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-action" (click)="markAllRead()">Mark All Read</button>
+      <button class="modal-action close" (click)="closeNotifications()">Close</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="settings-modal" *ngIf="showSettingsModal">
+    <div class="settings-header">
+      <span class="settings-title">Settings</span>
+      <button class="modal-close" (click)="closeSettings()" aria-label="Close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="settings-tabs">
+      <button [class.active]="settingsTab === 'profile'" (click)="setSettingsTab('profile')">Profile</button>
+      <button [class.active]="settingsTab === 'notifications'" (click)="setSettingsTab('notifications')">Notifications</button>
+      <button [class.active]="settingsTab === 'security'" (click)="setSettingsTab('security')">Security</button>
+    </div>
+    <div class="settings-body">
+      <!-- Profile Tab -->
+      <form *ngIf="settingsTab === 'profile'" (ngSubmit)="saveSettings()">
+        <div class="profile-section">
+          <div class="profile-title">
+            <span class="material-icons">person</span>
+            <span>Profile Information</span>
+          </div>
+          <div class="profile-fields">
+            <div class="profile-field">
+              <label>Full Name</label>
+              <input type="text" [(ngModel)]="profileForm.fullName" name="fullName" />
+            </div>
+            <div class="profile-field">
+              <label>Email</label>
+              <input type="email" [(ngModel)]="profileForm.email" name="email" />
+            </div>
+            <div class="profile-field">
+              <label>Phone</label>
+              <input type="text" [(ngModel)]="profileForm.phone" name="phone" />
+            </div>
+            <div class="profile-field">
+              <label>Address</label>
+              <input type="text" [(ngModel)]="profileForm.address" name="address" />
+            </div>
+          </div>
+        </div>
+        <div class="settings-footer">
+          <button type="button" class="modal-action close" (click)="closeSettings()">Cancel</button>
+          <button type="submit" class="modal-action">Save Changes</button>
+        </div>
+      </form>
+      <!-- Notifications Tab -->
+      <form *ngIf="settingsTab === 'notifications'" (ngSubmit)="saveSettings()">
+        <div class="profile-section">
+          <div class="profile-title">
+            <span class="material-icons">notifications</span>
+            <span>Notification Preferences</span>
+          </div>
+          <div class="profile-fields notification-fields">
+            <div class="profile-field notification-field">
+              <span><span class="material-icons">mail</span> Email Notifications</span>
+              <input type="checkbox" [(ngModel)]="notificationPrefs.email" name="notifEmail" />
+            </div>
+            <div class="profile-field notification-field">
+              <span>SMS Notifications</span>
+              <input type="checkbox" [(ngModel)]="notificationPrefs.sms" name="notifSms" />
+            </div>
+            <div class="profile-field notification-field">
+              <span>Push Notifications</span>
+              <input type="checkbox" [(ngModel)]="notificationPrefs.push" name="notifPush" />
+            </div>
+          </div>
+        </div>
+        <div class="settings-footer">
+          <button type="button" class="modal-action close" (click)="closeSettings()">Cancel</button>
+          <button type="submit" class="modal-action">Save Changes</button>
+        </div>
+      </form>
+      <!-- Security Tab -->
+      <form *ngIf="settingsTab === 'security'" (ngSubmit)="saveSettings()">
+        <div class="profile-section">
+          <div class="profile-title">
+            <span class="material-icons">lock</span>
+            <span>Security Settings</span>
+          </div>
+          <div class="security-fields">
+            <button type="button" class="security-action" (click)="changePassword()">Change Password</button>
+            <button type="button" class="security-action" (click)="enable2FA()">Enable Two-Factor Authentication</button>
+            <button type="button" class="security-action delete" (click)="deleteAccount()">Delete Account</button>
+          </div>
+        </div>
+        <div class="settings-footer">
+          <button type="button" class="modal-action close" (click)="closeSettings()">Cancel</button>
+          <button type="submit" class="modal-action">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="profile-modal" *ngIf="showProfileModal">
+    <div class="profile-modal-header">
+      <span class="profile-modal-title"><span class="material-icons">person</span> Profile</span>
+      <button class="modal-close" (click)="closeProfile()" aria-label="Close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="profile-modal-body">
+      <div class="profile-modal-user">
+        <div class="profile-modal-avatar">{{ profileInfo.initials }}</div>
+        <div class="profile-modal-userinfo">
+          <div class="profile-modal-name">{{ profileInfo.name }}</div>
+          <div class="profile-modal-role">{{ profileInfo.role }}</div>
+        </div>
+      </div>
+      <div class="profile-modal-contact">
+        <div><span class="material-icons">mail</span> {{ profileInfo.email }}</div>
+        <div><span class="material-icons">call</span> {{ profileInfo.phone }}</div>
+        <div><span class="material-icons">location_on</span> {{ profileInfo.location }}</div>
+      </div>
+      <div class="profile-modal-stats">
+        <div class="profile-modal-stat">
+          <span class="material-icons">inventory_2</span>
+          <div>
+            <div class="profile-modal-stat-value">{{ profileInfo.totalPackages }}</div>
+            <div class="profile-modal-stat-label">Total Packages</div>
+          </div>
+        </div>
+        <div class="profile-modal-stat">
+          <span class="material-icons">calendar_today</span>
+          <div>
+            <div class="profile-modal-stat-value">{{ profileInfo.memberSince }}</div>
+            <div class="profile-modal-stat-label">Member Since</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-modal-footer">
+      <button type="button" class="modal-action close" (click)="closeProfile()">Close</button>
+    </div>
+  </div>
+</nav> 

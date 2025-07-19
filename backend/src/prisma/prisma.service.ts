@@ -17,10 +17,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       throw new Error('DATABASE_URL is not defined in environment variables');
     }
     
-    super({
+     super({
       datasources: {
         db: {
-          url: databaseUrl,
+          url: configService.get<string>('DATABASE_URL'),
         },
       },
     });

@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -38,6 +38,8 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime? // Soft delete
+  resetCode        String?
+  resetCodeExpiry  DateTime?
 }
 
 model Parcel {

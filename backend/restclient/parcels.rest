@@ -1,0 +1,32 @@
+### Create parcel (admin only)
+POST http://localhost:3000/parcels
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "receiverId": "{{receiverId}}",
+  "weight": 2.5,
+  "pickupLocation": "Warehouse A",
+  "destination": "Customer Address"
+}
+
+### Get sent parcels
+GET http://localhost:3000/parcels/sent?page=1&limit=10&search=
+Authorization: Bearer {{token}}
+
+### Get received parcels
+GET http://localhost:3000/parcels/received?page=1&limit=10&search=
+Authorization: Bearer {{token}}
+
+### Update parcel status (admin only)
+PATCH http://localhost:3000/parcels/{{parcelId}}/status
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "status": "DELIVERED"
+}
+
+### Soft delete parcel
+DELETE http://localhost:3000/parcels/{{parcelId}}
+Authorization: Bearer {{token}} 

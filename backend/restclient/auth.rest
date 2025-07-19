@@ -1,0 +1,20 @@
+### Register a new user
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "itsbrian2025@gmail.com",
+  "password": "password123",
+  "phone": "1234567890",
+  "role": "ADMIN"
+}
+
+### Login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "itsbrian2025@gmail.com",
+  "password": "password123"
+} 

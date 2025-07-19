@@ -1,0 +1,23 @@
+@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZWRmYWJjNi0yZDI4LTQ4NDUtYWNkZi03ZWFiNTAyMjM5YzUiLCJlbWFpbCI6Iml0c2JyaWFuMjAyNUBnbWFpbC5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3NTI3NTE5MDcsImV4cCI6MTc1MjgzODMwN30.jUz_REZv8jFU3delS-rADEmrtAmJkjxSz1BAVOzcHOs
+
+### Get all users (paginated, search)
+GET http://localhost:3000/users?page=1&limit=10&search=
+Authorization: Bearer {{token}}
+
+### Get user by ID
+GET http://localhost:3000/users/{{userId}}
+Authorization: Bearer {{token}}
+
+### Update user
+PATCH http://localhost:3000/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Updated Name",
+  "phone": "0987654321"
+}
+
+### Soft delete user
+DELETE http://localhost:3000/users/{{userId}}
+Authorization: Bearer {{token}} 

@@ -1,6 +1,4 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
 import { IsString, IsNotEmpty, IsEmail, MinLength, IsEnum } from 'class-validator';
 import { Role } from 'generated/prisma';
 import { RegisterDtoInterface } from '../interfaces/auth-interfaces';

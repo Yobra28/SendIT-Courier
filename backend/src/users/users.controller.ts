@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Patch, Body, Delete, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles/roles.guard';
 import { Roles } from '../common/decorators/roles/roles.decorator';
 import { Role } from 'generated/prisma';

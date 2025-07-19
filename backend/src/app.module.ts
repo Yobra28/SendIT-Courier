@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersService } from './users/users.service';
 import { UsersModule } from './users/users.module';
@@ -15,10 +14,26 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ContactService } from './contact/contact.service';
 import { ContactController } from './contact/contact.controller';
 import { ContactModule } from './contact/contact.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [AuthModule, UsersModule, ParcelsModule, EmailModule, PrismaModule, ContactModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    UsersModule,
+    ParcelsModule,
+    EmailModule,
+    PrismaModule,
+    ContactModule,
+  ],
   controllers: [AppController, ParcelsController, ContactController],
-  providers: [AppService, AuthService, UsersService, ParcelsService, EmailService, PrismaService, ContactService],
+  providers: [
+    AppService,
+    UsersService,
+    ParcelsService,
+    EmailService,
+    PrismaService,
+    ContactService,
+  ],
 })
 export class AppModule {}

@@ -8,6 +8,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { CreateParcelDto } from './dto/create-parcel.dto';
+import { ParcelStatus } from '@prisma/client';
 
 interface ParcelListOptions {
   page?: number;
@@ -22,7 +23,7 @@ export class ParcelsService {
     private readonly emailService: EmailService,
   ) {}
 
-  async create(createParcelDto: any, adminId: string) {
+  async create(createParcelDto: CreateParcelDto, adminId: string) {
     // createParcelDto should include receiverId, weight, pickupLocation, destination
     const parcel = await this.prisma.parcel.create({
       data: {
@@ -94,11 +95,12 @@ export class ParcelsService {
   async updateStatus(id: string, status: string) {
     const parcel = await this.prisma.parcel.update({
       where: { id },
-      data: { status },
+      data: { status: status as ParcelStatus },
     });
     // Fetch receiver's email
     const receiver = await this.prisma.user.findUnique({ where: { id: parcel.receiverId } });
     if (receiver && receiver.email) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await this.emailService.sendStatusUpdateEmail(receiver.email, parcel);
     }
     return parcel;

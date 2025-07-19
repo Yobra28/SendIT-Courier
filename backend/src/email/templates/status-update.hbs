@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Parcel Status Update</title>
+    <style>
+      body { background: #f4f6fb; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+      .container { max-width: 480px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 32px 28px; }
+      .logo { display: block; margin: 0 auto 18px; width: 64px; height: 64px; background: #4f8cff; border-radius: 50%; color: #fff; font-size: 32px; line-height: 64px; text-align: center; font-weight: bold; letter-spacing: 2px; }
+      h2 { color: #22223b; margin-top: 0; }
+      p { color: #444; line-height: 1.6; }
+      .status-info { background: #e0e7ff; color: #1e293b; font-size: 18px; font-weight: 500; padding: 12px; border-radius: 8px; text-align: center; margin: 20px 0 16px 0; }
+      .cta-btn { display: inline-block; margin-top: 12px; background: #4f8cff; color: #fff; text-decoration: none; padding: 10px 28px; border-radius: 6px; font-weight: 600; font-size: 15px; letter-spacing: 1px; transition: background 0.2s; }
+      .cta-btn:hover { background: #2563eb; }
+      .footer { margin-top: 32px; color: #888; font-size: 13px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">S</div>
+      <h2>Parcel Status Update</h2>
+      <div class="status-info">Your parcel (ID: <b>{{id}}</b>) status has been updated to: <b>{{status}}</b>.</div>
+      <a href="https://sendit.example.com/login" class="cta-btn">Log In to Your Account</a>
+      <p>Thank you for using SendIT!</p>
+      <div class="footer">&copy; {{year}} SendIT. All rights reserved.</div>
+    </div>
+  </body>
+</html> 

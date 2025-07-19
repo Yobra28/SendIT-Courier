@@ -1,0 +1,189 @@
+<button routerLink="/user/dashboard" style="display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; color: #4f46e5; border: none; border-radius: 8px; padding: 0.5rem 1.2rem; font-weight: 600; font-size: 1rem; margin: 1.5rem 0 0 1.5rem; box-shadow: 0 1px 4px rgba(99,102,241,0.07); cursor: pointer; transition: background 0.15s;"><span class="material-icons" style="font-size: 1.3rem; vertical-align: middle;">arrow_back</span>Back to User Dashboard</button>
+<app-user-navbar></app-user-navbar>
+<div class="dashboard-wrapper">
+  <div class="welcome-card">
+    <h2>Welcome back, John Doe!</h2>
+    <p>Track your packages and manage your deliveries</p>
+  </div>
+  <div class="dashboard-container">
+    <div class="dashboard-content">
+      <!-- Removed stats-grid -->
+      <div class="dashboard-grid">
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h2>Recent Parcels</h2>
+            <a routerLink="/user/parcels" class="view-all">View All</a>
+          </div>
+          <div class="parcels-list">
+            <div *ngFor="let parcel of recentParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer;">
+              <div class="parcel-info">
+                <div class="parcel-details">
+                  <h4>{{ parcel.recipient }}</h4>
+                  <p>{{ parcel.destination }}</p>
+                  <span class="tracking-number">{{ parcel.trackingNumber }}</span>
+                </div>
+                <div class="parcel-status">
+                  <span class="status-badge" [ngClass]="'status-' + parcel.status.toLowerCase().replace(' ', '-')">
+                    {{ parcel.status }}
+                  </span>
+                  <span class="date">{{ parcel.createdAt | date:'short' }}</span>
+                </div>
+              </div>
+              <div class="parcel-actions">
+                <button class="action-btn-small" (click)="trackParcel(parcel.trackingNumber); $event.stopPropagation()">
+                  <span class="material-icons">search</span>
+                  Track
+                </button>
+                <button class="action-btn-small" (click)="viewMap(parcel.id); $event.stopPropagation()">
+                  <span class="material-icons">map</span>
+                  Map
+                </button>
+                <button class="action-btn-small" (click)="downloadReceipt(parcel.id); $event.stopPropagation()">
+                  <span class="material-icons">download</span>
+                  Receipt
+                </button>
+              </div>
+            </div>
+          </div>
+          <app-modal [open]="modalOpen" (close)="closeModal()">
+            <ng-container *ngIf="selectedParcel">
+              <h2>{{ selectedParcel.recipient }}</h2>
+              <p><strong>Destination:</strong> {{ selectedParcel.destination }}</p>
+              <p><strong>Weight:</strong> {{ selectedParcel.weight }}kg</p>
+              <p><strong>Price:</strong> ${{ selectedParcel.price }}</p>
+              <p><strong>Status:</strong> {{ selectedParcel.status }}</p>
+              <p><strong>Tracking Number:</strong> {{ selectedParcel.trackingNumber }}</p>
+              <p><strong>Created:</strong> {{ selectedParcel.createdAt | date:'short' }}</p>
+              <p><strong>Est. Delivery:</strong> {{ selectedParcel.estimatedDelivery | date:'short' }}</p>
+            </ng-container>
+          </app-modal>
+        </div>
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h2>Quick Actions</h2>
+          </div>
+          <div class="quick-actions">
+            <button class="action-btn" routerLink="/user/track">
+              <span class="material-icons">search</span>
+              <span>Track Parcel</span>
+            </button>
+            <button class="action-btn" (click)="openHistoryModal()">
+              <span class="material-icons">history</span>
+              <span>View History</span>
+            </button>
+            <button class="action-btn" (click)="openSupportModal()">
+              <span class="material-icons">support</span>
+              <span>Get Support</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User History Modal -->
+<app-modal [open]="historyModalOpen" (close)="closeHistoryModal()">
+  <h2 style="margin-bottom: 1rem; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; color: #4f46e5; display: flex; align-items: center; gap: 0.5rem;">
+    <span class="material-icons" style="font-size: 2rem; vertical-align: middle; color: #6366f1;">history</span>
+    User History
+  </h2>
+  <div style="margin-bottom: 1.5rem; background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%); border-radius: 12px; padding: 1rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; box-shadow: 0 2px 8px rgba(99,102,241,0.08);">
+    <div style="background: #fff; color: #6366f1; border-radius: 50%; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 700; border: 2.5px solid #a855f7; box-shadow: 0 1px 6px rgba(168,85,247,0.08);">
+      <span class="material-icons" style="font-size: 2.2rem;">person</span>
+    </div>
+    <div style="color: #fff;">
+      <div style="font-weight: 700; font-size: 1.18rem; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;">John Doe</div>
+      <div style="font-size: 0.98rem; opacity: 0.92;">user&#64;sendit.com</div>
+      <div style="font-size: 0.98rem; opacity: 0.92;">+234 801 234 5678</div>
+    </div>
+  </div>
+  <div *ngIf="userHistory.length; else noHistory">
+    <table style="width: 100%; border-collapse: collapse; background: #f8fafc; border-radius: 10px; overflow: hidden; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;">
+      <thead>
+        <tr style="background: #e0e7ef; color: #4f46e5;">
+          <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 700; font-size: 1.05rem;">
+            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem;">event</span>
+            Date
+          </th>
+          <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 700; font-size: 1.05rem;">
+            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem;">assignment</span>
+            Action
+          </th>
+          <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 700; font-size: 1.05rem;">
+            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem;">info</span>
+            Details
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of userHistory" class="history-row">
+          <td style="padding: 0.7rem 1rem; font-weight: 500; color: #4f46e5;">
+            <span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.2rem; color: #a855f7;">event</span>
+            {{ h.date }}
+          </td>
+          <td style="padding: 0.7rem 1rem; color: #22223b;">
+            <span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.2rem; color: #6366f1;">assignment</span>
+            {{ h.action }}
+          </td>
+          <td style="padding: 0.7rem 1rem; color: #64748b;">
+            <span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 0.2rem; color: #f59e42;">info</span>
+            {{ h.details }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <ng-template #noHistory>
+    <p>No history found.</p>
+  </ng-template>
+  <button class="action-btn-small" style="margin-top: 1.5rem; background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%); color: #fff; font-weight: 600; border: none;" (click)="closeHistoryModal()">
+    <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem;">close</span>
+    Close
+  </button>
+</app-modal>
+
+<!-- Support/Contact Modal -->
+<app-modal [open]="supportModalOpen" (close)="closeSupportModal()">
+  <h2 style="margin-bottom: 1rem; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; color: #4f46e5; display: flex; align-items: center; gap: 0.5rem;">
+    <span class="material-icons" style="font-size: 2rem; vertical-align: middle; color: #6366f1;">support_agent</span>
+    Contact Support
+  </h2>
+  <form *ngIf="!supportFormSubmitted; else supportThanks" (ngSubmit)="submitSupportForm()" style="display: flex; flex-direction: column; gap: 1.2rem; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;">
+    <label style="font-weight: 500; color: #22223b;">
+      <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem; color: #6366f1;">person</span>
+      Name
+      <input type="text" [(ngModel)]="supportForm.name" name="supportName" required style="margin-top: 0.3rem; padding: 0.6rem 1rem; border-radius: 7px; border: 1.2px solid #e5e7eb; background: #f8fafc; width: 100%; font-size: 1rem;" />
+    </label>
+    <label style="font-weight: 500; color: #22223b;">
+      <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem; color: #6366f1;">mail</span>
+      Email
+      <input type="email" [(ngModel)]="supportForm.email" name="supportEmail" required style="margin-top: 0.3rem; padding: 0.6rem 1rem; border-radius: 7px; border: 1.2px solid #e5e7eb; background: #f8fafc; width: 100%; font-size: 1rem;" />
+    </label>
+    <label style="font-weight: 500; color: #22223b;">
+      <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem; color: #6366f1;">message</span>
+      Message
+      <textarea [(ngModel)]="supportForm.message" name="supportMessage" required style="margin-top: 0.3rem; padding: 0.7rem 1rem; border-radius: 7px; border: 1.2px solid #e5e7eb; background: #f8fafc; width: 100%; font-size: 1rem; min-height: 90px;"></textarea>
+    </label>
+    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+      <button type="button" class="action-btn-small" (click)="closeSupportModal()" style="background: #e0e7ef; color: #6366f1; font-weight: 600; border: none;">
+        <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem;">close</span>
+        Cancel
+      </button>
+      <button type="submit" class="action-btn-small" style="background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%); color: #fff; font-weight: 600; border: none;">
+        <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem;">send</span>
+        Send
+      </button>
+    </div>
+  </form>
+  <ng-template #supportThanks>
+    <p style="font-size: 1.1rem; color: #22c55e; font-weight: 600; margin-bottom: 1.2rem; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+      <span class="material-icons" style="font-size: 1.3rem; color: #22c55e;">check_circle</span>
+      Thank you for contacting support! We'll get back to you soon.
+    </p>
+    <button class="action-btn-small" (click)="closeSupportModal()" style="background: #e0e7ef; color: #6366f1; font-weight: 600; border: none;">
+      <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle; margin-right: 0.2rem;">close</span>
+      Close
+    </button>
+  </ng-template>
+</app-modal> 
