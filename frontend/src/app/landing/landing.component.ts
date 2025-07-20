@@ -1,11 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ModalComponent } from '../shared/components/modal.component';
+import { LoginComponent } from '../auth/components/login/login.component';
+import { RegisterComponent } from '../auth/components/register/register.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ModalComponent, LoginComponent, RegisterComponent],
   template: `
     <div class="landing-container">
       <nav class="landing-nav">
@@ -21,8 +24,8 @@ import { RouterModule } from '@angular/router';
             <a href="#faq">FAQ</a>
           </div>
           <div class="nav-actions">
-            <button class="btn btn-outline" routerLink="/auth/login">Sign In</button>
-            <button class="btn btn-primary" routerLink="/auth/register">Get Started</button>
+            <button class="btn btn-outline" (click)="openLoginModal()">Sign In</button>
+            <button class="btn btn-primary" (click)="openRegisterModal()">Get Started</button>
           </div>
         </div>
       </nav>
@@ -41,11 +44,11 @@ import { RouterModule } from '@angular/router';
                 your packages reach their destination safely and on time.
               </p>
               <div class="hero-actions">
-                <button class="btn btn-primary btn-large" routerLink="/auth/register">
+                <button class="btn btn-primary btn-large" (click)="openRegisterModal()">
                   <span class="material-icons">send</span>
                   Start Shipping
                 </button>
-                <button class="btn btn-outline btn-large" routerLink="/auth/login">
+                <button class="btn btn-outline btn-large" (click)="openLoginModal()">
                   <span class="material-icons">search</span>
                   Track Package
                 </button>
@@ -261,6 +264,15 @@ import { RouterModule } from '@angular/router';
         </section>
       </main>
 
+      <!-- Login Modal -->
+      <app-modal [open]="showLoginModal" (close)="closeModals()">
+        <app-login [inModal]="true"></app-login>
+      </app-modal>
+      <!-- Register Modal -->
+      <app-modal [open]="showRegisterModal" (close)="closeModals()">
+        <app-register [inModal]="true"></app-register>
+      </app-modal>
+
       <footer class="landing-footer">
         <div class="footer-content">
           <div class="footer-section">
@@ -417,7 +429,7 @@ import { RouterModule } from '@angular/router';
 
     .hero-section {
       padding: 4rem 1rem;
-      min-height: 80vh;
+      min-height: 10vh;
       display: flex;
       align-items: center;
     }
@@ -670,8 +682,7 @@ import { RouterModule } from '@angular/router';
     }
 
     .pricing-section {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
+      background: linear-gradient(120deg, #f8fafc 0%, #e0e7ef 70%, #dbeafe 100%);
       padding: 4rem 1rem;
       text-align: center;
     }
@@ -785,8 +796,8 @@ import { RouterModule } from '@angular/router';
     }
 
     .contact-section {
+      background: linear-gradient(120deg, #f8fafc 0%, #e0e7ef 70%, #dbeafe 100%);
       padding: 4rem 1rem;
-      background: #f9fafb;
     }
 
     .contact-grid {
@@ -895,8 +906,7 @@ import { RouterModule } from '@angular/router';
     }
 
     .cta-section {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
+      background: linear-gradient(120deg, #f3f4f6 0%, #e0e7ef 60%, #a5b4fc 100%);
       padding: 4rem 1rem;
       text-align: center;
     }
@@ -1016,7 +1026,7 @@ import { RouterModule } from '@angular/router';
     }
 
     .faq-section {
-      background: #fff;
+      background: linear-gradient(120deg, #f8fafc 0%, #e0e7ef 70%, #dbeafe 100%);
       padding: 4rem 1rem;
       text-align: center;
     }
@@ -1136,6 +1146,22 @@ export class LandingComponent {
     }
   ];
   faqOpen = this.faqs.map(() => false);
+
+  showLoginModal = false;
+  showRegisterModal = false;
+
+  openLoginModal() {
+    this.showLoginModal = true;
+    this.showRegisterModal = false;
+  }
+  openRegisterModal() {
+    this.showRegisterModal = true;
+    this.showLoginModal = false;
+  }
+  closeModals() {
+    this.showLoginModal = false;
+    this.showRegisterModal = false;
+  }
 
   toggleFaq(index: number) {
     this.faqOpen[index] = !this.faqOpen[index];

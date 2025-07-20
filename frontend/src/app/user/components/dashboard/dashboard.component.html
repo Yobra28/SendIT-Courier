@@ -1,10 +1,7 @@
-<button routerLink="/user/dashboard" style="display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; color: #4f46e5; border: none; border-radius: 8px; padding: 0.5rem 1.2rem; font-weight: 600; font-size: 1rem; margin: 1.5rem 0 0 1.5rem; box-shadow: 0 1px 4px rgba(99,102,241,0.07); cursor: pointer; transition: background 0.15s;"><span class="material-icons" style="font-size: 1.3rem; vertical-align: middle;">arrow_back</span>Back to User Dashboard</button>
 <app-user-navbar></app-user-navbar>
+<h2 style="margin-top: 2.5rem; font-size: 2rem; color: #2563eb;">Welcome back!</h2>
+<p style="font-size: 1.15rem; color: #555; margin-bottom: 2.5rem;">Track your packages and manage your deliveries easily.</p>
 <div class="dashboard-wrapper">
-  <div class="welcome-card">
-    <h2>Welcome back, John Doe!</h2>
-    <p>Track your packages and manage your deliveries</p>
-  </div>
   <div class="dashboard-container">
     <div class="dashboard-content">
       <!-- Removed stats-grid -->
@@ -12,36 +9,85 @@
         <div class="dashboard-section">
           <div class="section-header">
             <h2>Recent Parcels</h2>
-            <a routerLink="/user/parcels" class="view-all">View All</a>
+            <div>
+              <button 
+                (click)="setParcelTab('sent')" 
+                [class.active]="activeParcelTab === 'sent'"
+                style="margin-right: 0.5rem; padding: 0.4rem 1.2rem; border-radius: 6px; border: 1px solid #2563eb; background: #fff; color: #2563eb; font-weight: 600; cursor: pointer;"
+              >
+                Sent
+              </button>
+              <button 
+                (click)="setParcelTab('received')" 
+                [class.active]="activeParcelTab === 'received'"
+                style="padding: 0.4rem 1.2rem; border-radius: 6px; border: 1px solid #2563eb; background: #fff; color: #2563eb; font-weight: 600; cursor: pointer;"
+              >
+                Received
+              </button>
+              <a routerLink="/user/parcels" class="view-all" style="margin-left: 1rem;">View All</a>
+            </div>
           </div>
           <div class="parcels-list">
-            <div *ngFor="let parcel of recentParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer;">
-              <div class="parcel-info">
-                <div class="parcel-details">
-                  <h4>{{ parcel.recipient }}</h4>
-                  <p>{{ parcel.destination }}</p>
-                  <span class="tracking-number">{{ parcel.trackingNumber }}</span>
+            <div *ngIf="activeParcelTab === 'sent'">
+              <div *ngFor="let parcel of sentParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer;">
+                <div class="parcel-info">
+                  <div class="parcel-details">
+                    <h4>{{ parcel.recipient }}</h4>
+                    <p>{{ parcel.destination }}</p>
+                    <span class="tracking-number">{{ parcel.trackingNumber }}</span>
+                  </div>
+                  <div class="parcel-status">
+                    <span class="status-badge" [ngClass]="'status-' + parcel.status.toLowerCase().replace(' ', '-')">
+                      {{ parcel.status }}
+                    </span>
+                    <span class="date">{{ parcel.createdAt | date:'short' }}</span>
+                  </div>
                 </div>
-                <div class="parcel-status">
-                  <span class="status-badge" [ngClass]="'status-' + parcel.status.toLowerCase().replace(' ', '-')">
-                    {{ parcel.status }}
-                  </span>
-                  <span class="date">{{ parcel.createdAt | date:'short' }}</span>
+                <div class="parcel-actions">
+                  <button class="action-btn-small" (click)="trackParcel(parcel.trackingNumber); $event.stopPropagation()">
+                    <span class="material-icons">search</span>
+                    Track
+                  </button>
+                  <button class="action-btn-small" (click)="viewMap(parcel.id); $event.stopPropagation()">
+                    <span class="material-icons">map</span>
+                    Map
+                  </button>
+                  <button class="action-btn-small" (click)="downloadReceipt(parcel.id); $event.stopPropagation()">
+                    <span class="material-icons">download</span>
+                    Receipt
+                  </button>
                 </div>
               </div>
-              <div class="parcel-actions">
-                <button class="action-btn-small" (click)="trackParcel(parcel.trackingNumber); $event.stopPropagation()">
-                  <span class="material-icons">search</span>
-                  Track
-                </button>
-                <button class="action-btn-small" (click)="viewMap(parcel.id); $event.stopPropagation()">
-                  <span class="material-icons">map</span>
-                  Map
-                </button>
-                <button class="action-btn-small" (click)="downloadReceipt(parcel.id); $event.stopPropagation()">
-                  <span class="material-icons">download</span>
-                  Receipt
-                </button>
+            </div>
+            <div *ngIf="activeParcelTab === 'received'">
+              <div *ngFor="let parcel of receivedParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer;">
+                <div class="parcel-info">
+                  <div class="parcel-details">
+                    <h4>{{ parcel.recipient }}</h4>
+                    <p>{{ parcel.destination }}</p>
+                    <span class="tracking-number">{{ parcel.trackingNumber }}</span>
+                  </div>
+                  <div class="parcel-status">
+                    <span class="status-badge" [ngClass]="'status-' + parcel.status.toLowerCase().replace(' ', '-')">
+                      {{ parcel.status }}
+                    </span>
+                    <span class="date">{{ parcel.createdAt | date:'short' }}</span>
+                  </div>
+                </div>
+                <div class="parcel-actions">
+                  <button class="action-btn-small" (click)="trackParcel(parcel.trackingNumber); $event.stopPropagation()">
+                    <span class="material-icons">search</span>
+                    Track
+                  </button>
+                  <button class="action-btn-small" (click)="viewMap(parcel.id); $event.stopPropagation()">
+                    <span class="material-icons">map</span>
+                    Map
+                  </button>
+                  <button class="action-btn-small" (click)="downloadReceipt(parcel.id); $event.stopPropagation()">
+                    <span class="material-icons">download</span>
+                    Receipt
+                  </button>
+                </div>
               </div>
             </div>
           </div>

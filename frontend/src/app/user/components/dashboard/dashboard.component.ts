@@ -238,51 +238,57 @@ interface RecentParcel {
   `]
 })
 export class DashboardComponent implements OnInit {
-  recentParcels: RecentParcel[] = [
+  // Remove or comment out the old recentParcels array
+  // recentParcels: RecentParcel[] = [ ... ];
+
+  activeParcelTab: 'sent' | 'received' = 'sent';
+  sentParcels: RecentParcel[] = [
     {
       id: '1',
-      recipient: 'Sarah Johnson',
-      destination: 'New York, NY',
-      status: 'In Transit',
-      createdAt: new Date('2025-01-15T03:00:00'),
-      trackingNumber: 'ST123456789',
+      recipient: 'Alice Johnson',
+      destination: 'Abuja',
+      status: 'Delivered',
+      createdAt: new Date('2024-07-10T10:00:00'),
+      trackingNumber: 'SENT123456',
       weight: 2.5,
-      price: 45.99,
-      estimatedDelivery: new Date('2025-01-18T03:00:00')
+      price: 1500,
+      estimatedDelivery: new Date('2024-07-12T10:00:00'),
     },
     {
       id: '2',
-      recipient: 'Mike Chen',
-      destination: 'Los Angeles, CA',
-      status: 'Delivered',
-      createdAt: new Date('2025-01-14T10:00:00'),
-      trackingNumber: 'ST123456790',
+      recipient: 'Bob Smith',
+      destination: 'Lagos',
+      status: 'In Transit',
+      createdAt: new Date('2024-07-12T14:30:00'),
+      trackingNumber: 'SENT654321',
       weight: 1.2,
-      price: 30.50,
-      estimatedDelivery: new Date('2025-01-16T10:00:00')
+      price: 900,
+      estimatedDelivery: new Date('2024-07-15T10:00:00'),
     },
+  ];
+  receivedParcels: RecentParcel[] = [
     {
       id: '3',
-      recipient: 'Emily Davis',
-      destination: 'Chicago, IL',
-      status: 'Pending',
-      createdAt: new Date('2025-01-13T09:00:00'),
-      trackingNumber: 'ST123456791',
+      recipient: 'You',
+      destination: 'Port Harcourt',
+      status: 'Delivered',
+      createdAt: new Date('2024-07-09T09:00:00'),
+      trackingNumber: 'RECV789012',
       weight: 3.0,
-      price: 55.00,
-      estimatedDelivery: new Date('2025-01-17T09:00:00')
+      price: 2000,
+      estimatedDelivery: new Date('2024-07-11T10:00:00'),
     },
     {
       id: '4',
-      recipient: 'David Wilson',
-      destination: 'Miami, FL',
-      status: 'In Transit',
-      createdAt: new Date('2025-01-12T08:00:00'),
-      trackingNumber: 'ST123456792',
-      weight: 2.0,
-      price: 40.00,
-      estimatedDelivery: new Date('2025-01-15T08:00:00')
-    }
+      recipient: 'You',
+      destination: 'Enugu',
+      status: 'Pending',
+      createdAt: new Date('2024-07-13T16:00:00'),
+      trackingNumber: 'RECV210987',
+      weight: 0.8,
+      price: 600,
+      estimatedDelivery: new Date('2024-07-16T10:00:00'),
+    },
   ];
 
   modalOpen = false;
@@ -361,5 +367,9 @@ export class DashboardComponent implements OnInit {
     setTimeout(() => {
       this.closeSupportModal();
     }, 1500);
+  }
+
+  setParcelTab(tab: 'sent' | 'received') {
+    this.activeParcelTab = tab;
   }
 }

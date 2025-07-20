@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -15,7 +15,7 @@ interface MockUser {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
-    <div class="auth-container">
+    <div class="auth-container" [ngClass]="{'modal-bg': inModal}">
       <div class="auth-card">
         <div class="auth-header">
           <div class="logo">
@@ -111,8 +111,18 @@ interface MockUser {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
       padding: 1rem;
+    }
+    .auth-container.modal-bg {
+      background: none !important;
+      box-shadow: none !important;
+      min-height: unset !important;
+      padding: 0 !important;
+    }
+    .auth-container.modal-bg .auth-card {
+      background: #fff;
+      box-shadow: 0 8px 32px rgba(30,41,59,0.18), 0 1.5px 8px rgba(0,0,0,0.08);
     }
 
     .auth-card {
@@ -278,6 +288,7 @@ interface MockUser {
   `]
 })
 export class LoginComponent {
+  @Input() inModal = false;
   // Mock user database
   private mockUsers: MockUser[] = [
     {

@@ -25,6 +25,18 @@ interface ParcelOrder {
   status: string;
   createdAt: Date;
   trackingNumber: string;
+  pricing: number;
+}
+
+// Add mock user data interface
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  totalPackages: number;
+  status: 'Active' | 'Inactive';
+  joinDate: string;
 }
 
 @Component({
@@ -133,316 +145,374 @@ interface ParcelOrder {
             </button>
           </div>
         </div>
+        <div class="admin-tabs">
+          <button [class.active]="activeTab === 'packages'" (click)="activeTab = 'packages'">Packages</button>
+          <button [class.active]="activeTab === 'users'" (click)="activeTab = 'users'">Users</button>
+        </div>
       </div>
 
       <div class="admin-content">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon total">
-              <span class="material-icons">inventory</span>
-            </div>
-            <div class="stat-info">
-              <h3>{{ stats.totalParcels }}</h3>
-              <p>Total Parcels</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon pending">
-              <span class="material-icons">schedule</span>
-            </div>
-            <div class="stat-info">
-              <h3>{{ stats.pendingParcels }}</h3>
-              <p>Pending</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon transit">
-              <span class="material-icons">local_shipping</span>
-            </div>
-            <div class="stat-info">
-              <h3>{{ stats.inTransitParcels }}</h3>
-              <p>In Transit</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon delivered">
-              <span class="material-icons">check_circle</span>
-            </div>
-            <div class="stat-info">
-              <h3>{{ stats.deliveredParcels }}</h3>
-              <p>Delivered</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon revenue">
-              <span class="material-icons">attach_money</span>
-            </div>
-            <div class="stat-info">
-              <h3>\${{ stats.totalRevenue.toLocaleString() }}</h3>
-              <p>Total Revenue</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon users">
-              <span class="material-icons">people</span>
-            </div>
-            <div class="stat-info">
-              <h3>{{ stats.activeUsers }}</h3>
-              <p>Active Users</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Create Modal -->
-        <div *ngIf="showCreateForm" class="modal-backdrop" (click)="showCreateForm = false">
-          <div class="modal-content" (click)="$event.stopPropagation()">
-            <div class="form-header">
-              <h2>Create New Parcel Order</h2>
-              <button class="close-btn" (click)="showCreateForm = false">
-                <span class="material-icons">close</span>
-              </button>
-            </div>
-            <form [formGroup]="parcelForm" (ngSubmit)="createParcel()">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label for="senderName" class="form-label">Sender Name</label>
-                  <input type="text" id="senderName" class="form-control" placeholder="Enter sender name" formControlName="senderName" />
-                </div>
-                <div class="form-group">
-                  <label for="senderPhone" class="form-label">Sender Phone</label>
-                  <input type="tel" id="senderPhone" class="form-control" placeholder="Enter sender phone" formControlName="senderPhone" />
-                </div>
-                <div class="form-group">
-                  <label for="recipientName" class="form-label">Recipient Name</label>
-                  <input type="text" id="recipientName" class="form-control" placeholder="Enter recipient name" formControlName="recipientName" />
-                </div>
-                <div class="form-group">
-                  <label for="recipientPhone" class="form-label">Recipient Phone</label>
-                  <input type="tel" id="recipientPhone" class="form-control" placeholder="Enter recipient phone" formControlName="recipientPhone" />
-                </div>
-                <div class="form-group">
-                  <label for="origin" class="form-label">Pickup Location</label>
-                  <input type="text" id="origin" class="form-control" placeholder="Enter pickup address" formControlName="origin" />
-                </div>
-                <div class="form-group">
-                  <label for="destination" class="form-label">Destination</label>
-                  <input type="text" id="destination" class="form-control" placeholder="Enter destination address" formControlName="destination" />
-                </div>
-                <div class="form-group">
-                  <label for="weight" class="form-label">Weight (kg)</label>
-                  <input type="number" id="weight" class="form-control" placeholder="Enter weight" formControlName="weight" step="0.1" min="0" />
-                </div>
-                <div class="form-group">
-                  <label for="category" class="form-label">Category</label>
-                  <select id="category" class="form-control" formControlName="category">
-                    <option value="">Select category</option>
-                    <option value="documents">Documents</option>
-                    <option value="electronics">Electronics</option>
-                    <option value="clothing">Clothing</option>
-                    <option value="food">Food</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
+        <ng-container *ngIf="activeTab === 'packages'">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon total">
+                <span class="material-icons">inventory</span>
               </div>
-              <div class="form-actions">
-                <button type="button" class="btn btn-outline" (click)="showCreateForm = false">Cancel</button>
-                <button type="submit" class="btn btn-primary" [disabled]="!parcelForm.valid || isCreating">
-                  <span *ngIf="isCreating" class="spinner"></span>
-                  <span *ngIf="!isCreating">Create Order</span>
+              <div class="stat-info">
+                <h3>{{ stats.totalParcels }}</h3>
+                <p>Total Parcels</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon pending">
+                <span class="material-icons">schedule</span>
+              </div>
+              <div class="stat-info">
+                <h3>{{ stats.pendingParcels }}</h3>
+                <p>Pending</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon transit">
+                <span class="material-icons">local_shipping</span>
+              </div>
+              <div class="stat-info">
+                <h3>{{ stats.inTransitParcels }}</h3>
+                <p>In Transit</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon delivered">
+                <span class="material-icons">check_circle</span>
+              </div>
+              <div class="stat-info">
+                <h3>{{ stats.deliveredParcels }}</h3>
+                <p>Delivered</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon revenue">
+                <span class="material-icons">attach_money</span>
+              </div>
+              <div class="stat-info">
+                <h3>\${{ stats.totalRevenue.toLocaleString() }}</h3>
+                <p>Total Revenue</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon users">
+                <span class="material-icons">people</span>
+              </div>
+              <div class="stat-info">
+                <h3>{{ stats.activeUsers }}</h3>
+                <p>Active Users</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Create Modal -->
+          <div *ngIf="showCreateForm" class="modal-backdrop" (click)="showCreateForm = false">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+              <div class="form-header">
+                <h2>Create New Parcel Order</h2>
+                <button class="close-btn" (click)="showCreateForm = false">
+                  <span class="material-icons">close</span>
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-        <!-- End Create Modal -->
-
-        <!-- Edit Modal -->
-        <div *ngIf="activeModal === 'edit' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
-          <div class="modal-content" (click)="$event.stopPropagation()">
-            <div class="form-header">
-              <h2>Edit Parcel Order</h2>
-              <button class="close-btn" (click)="closeModal()">
-                <span class="material-icons">close</span>
-              </button>
+              <form [formGroup]="parcelForm" (ngSubmit)="createParcel()">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="senderName" class="form-label">Sender Name</label>
+                    <input type="text" id="senderName" class="form-control" placeholder="Enter sender name" formControlName="senderName" />
+                  </div>
+                  <div class="form-group">
+                    <label for="senderPhone" class="form-label">Sender Phone</label>
+                    <input type="tel" id="senderPhone" class="form-control" placeholder="Enter sender phone" formControlName="senderPhone" />
+                  </div>
+                  <div class="form-group">
+                    <label for="recipientName" class="form-label">Recipient Name</label>
+                    <input type="text" id="recipientName" class="form-control" placeholder="Enter recipient name" formControlName="recipientName" />
+                  </div>
+                  <div class="form-group">
+                    <label for="recipientPhone" class="form-label">Recipient Phone</label>
+                    <input type="tel" id="recipientPhone" class="form-control" placeholder="Enter recipient phone" formControlName="recipientPhone" />
+                  </div>
+                  <div class="form-group">
+                    <label for="origin" class="form-label">Pickup Location</label>
+                    <input type="text" id="origin" class="form-control" placeholder="Enter pickup address" formControlName="origin" />
+                  </div>
+                  <div class="form-group">
+                    <label for="destination" class="form-label">Destination</label>
+                    <input type="text" id="destination" class="form-control" placeholder="Enter destination address" formControlName="destination" />
+                  </div>
+                  <div class="form-group">
+                    <label for="weight" class="form-label">Weight (kg)</label>
+                    <input type="number" id="weight" class="form-control" placeholder="Enter weight" formControlName="weight" step="0.1" min="0" />
+                  </div>
+                  <div class="form-group">
+                    <label for="category" class="form-label">Category</label>
+                    <select id="category" class="form-control" formControlName="category">
+                      <option value="">Select category</option>
+                      <option value="documents">Documents</option>
+                      <option value="electronics">Electronics</option>
+                      <option value="clothing">Clothing</option>
+                      <option value="food">Food</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="pricing" class="form-label">Pricing</label>
+                    <select id="pricing" class="form-control" formControlName="pricing">
+                      <option [value]="500">Standard (₦500)</option>
+                      <option [value]="1200">Express (₦1,200)</option>
+                      <option [value]="2000">Overnight (₦2,000)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn btn-outline" (click)="showCreateForm = false">Cancel</button>
+                  <button type="submit" class="btn btn-primary" [disabled]="!parcelForm.valid || isCreating">
+                    <span *ngIf="isCreating" class="spinner"></span>
+                    <span *ngIf="!isCreating">Create Order</span>
+                  </button>
+                </div>
+              </form>
             </div>
-            <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Tracking Number</label>
-                  <div>{{ selectedOrder.trackingNumber }}</div>
+          </div>
+          <!-- End Create Modal -->
+
+          <!-- Edit Modal -->
+          <div *ngIf="activeModal === 'edit' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+              <div class="form-header">
+                <h2>Edit Parcel Order</h2>
+                <button class="close-btn" (click)="closeModal()">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+              <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Tracking Number</label>
+                    <div>{{ selectedOrder.trackingNumber }}</div>
+                  </div>
+                  <div class="form-group">
+                    <label>Status</label>
+                    <select class="form-control" formControlName="status">
+                      <option value="Pending">Pending</option>
+                      <option value="In Transit">In Transit</option>
+                      <option value="Out for Pickup">Out for Pickup</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Sender</label>
+                    <input class="form-control" formControlName="sender" />
+                  </div>
+                  <div class="form-group">
+                    <label>Recipient</label>
+                    <input class="form-control" formControlName="recipient" />
+                  </div>
+                  <div class="form-group">
+                    <label>Origin</label>
+                    <input class="form-control" formControlName="origin" />
+                  </div>
+                  <div class="form-group">
+                    <label>Destination</label>
+                    <input class="form-control" formControlName="destination" />
+                  </div>
+                  <div class="form-group">
+                    <label>Weight (kg)</label>
+                    <input type="number" class="form-control" formControlName="weight" min="0.1" step="0.1" />
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>Status</label>
-                  <select class="form-control" formControlName="status">
-                    <option value="Pending">Pending</option>
-                    <option value="In Transit">In Transit</option>
-                    <option value="Out for Pickup">Out for Pickup</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
+                <div class="form-actions">
+                  <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+                  <button type="submit" class="btn btn-primary" [disabled]="!editForm.valid">Save Changes</button>
                 </div>
-                <div class="form-group">
-                  <label>Sender</label>
-                  <input class="form-control" formControlName="sender" />
+              </form>
+            </div>
+          </div>
+          <!-- End Edit Modal -->
+
+          <!-- View Modal -->
+          <div *ngIf="activeModal === 'view' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+              <div class="form-header">
+                <h2>Parcel Order Details</h2>
+                <button class="close-btn" (click)="closeModal()">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+              <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group"><label>Tracking Number</label>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span>{{ selectedOrder.trackingNumber }}</span>
+                    <button class="btn btn-xs btn-outline" style="padding: 0 0.5rem; font-size: 0.8em;" (click)="copyTrackingNumber(selectedOrder.trackingNumber)">
+                      <span class="material-icons" style="font-size: 1em;">content_copy</span>
+                    </button>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>Recipient</label>
-                  <input class="form-control" formControlName="recipient" />
-                </div>
-                <div class="form-group">
-                  <label>Origin</label>
-                  <input class="form-control" formControlName="origin" />
-                </div>
-                <div class="form-group">
-                  <label>Destination</label>
-                  <input class="form-control" formControlName="destination" />
-                </div>
-                <div class="form-group">
-                  <label>Weight (kg)</label>
-                  <input type="number" class="form-control" formControlName="weight" min="0.1" step="0.1" />
-                </div>
+                <div class="form-group"><label>Status</label><div>{{ selectedOrder.status }}</div></div>
+                <div class="form-group"><label>Sender</label><div>{{ selectedOrder.sender }}</div></div>
+                <div class="form-group"><label>Recipient</label><div>{{ selectedOrder.recipient }}</div></div>
+                <div class="form-group"><label>Origin</label><div>{{ selectedOrder.origin }}</div></div>
+                <div class="form-group"><label>Destination</label><div>{{ selectedOrder.destination }}</div></div>
+                <div class="form-group"><label>Weight</label><div>{{ selectedOrder.weight }}kg</div></div>
+                <div class="form-group"><label>Date</label><div>{{ selectedOrder.createdAt | date:'short' }}</div></div>
               </div>
               <div class="form-actions">
-                <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" [disabled]="!editForm.valid">Save Changes</button>
+                <button type="button" class="btn btn-outline" (click)="closeModal()">Close</button>
               </div>
-            </form>
-          </div>
-        </div>
-        <!-- End Edit Modal -->
-
-        <!-- View Modal -->
-        <div *ngIf="activeModal === 'view' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
-          <div class="modal-content" (click)="$event.stopPropagation()">
-            <div class="form-header">
-              <h2>Parcel Order Details</h2>
-              <button class="close-btn" (click)="closeModal()">
-                <span class="material-icons">close</span>
-              </button>
-            </div>
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-              <div class="form-group"><label>Tracking Number</label>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <span>{{ selectedOrder.trackingNumber }}</span>
-                  <button class="btn btn-xs btn-outline" style="padding: 0 0.5rem; font-size: 0.8em;" (click)="copyTrackingNumber(selectedOrder.trackingNumber)">
-                    <span class="material-icons" style="font-size: 1em;">content_copy</span>
-                  </button>
-                </div>
-              </div>
-              <div class="form-group"><label>Status</label><div>{{ selectedOrder.status }}</div></div>
-              <div class="form-group"><label>Sender</label><div>{{ selectedOrder.sender }}</div></div>
-              <div class="form-group"><label>Recipient</label><div>{{ selectedOrder.recipient }}</div></div>
-              <div class="form-group"><label>Origin</label><div>{{ selectedOrder.origin }}</div></div>
-              <div class="form-group"><label>Destination</label><div>{{ selectedOrder.destination }}</div></div>
-              <div class="form-group"><label>Weight</label><div>{{ selectedOrder.weight }}kg</div></div>
-              <div class="form-group"><label>Date</label><div>{{ selectedOrder.createdAt | date:'short' }}</div></div>
-            </div>
-            <div class="form-actions">
-              <button type="button" class="btn btn-outline" (click)="closeModal()">Close</button>
             </div>
           </div>
-        </div>
-        <!-- End View Modal -->
- 
-         <!-- Map Modal -->
-         <div *ngIf="activeModal === 'map' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
-           <div class="modal-content" (click)="$event.stopPropagation()">
-             <div class="form-header">
-               <h2>Parcel Route Map</h2>
-               <button class="close-btn" (click)="closeModal()">
-                 <span class="material-icons">close</span>
-               </button>
-             </div>
-             <div style="padding: 2rem; text-align: center;">
-               <div style="margin-bottom: 1rem; font-size: 1.1em;">
-                 <b>{{ selectedOrder.origin }}</b>
-                 <span class="material-icons" style="vertical-align: middle; font-size: 1.2em; color: var(--primary-600);">arrow_forward</span>
-                 <b>{{ selectedOrder.destination }}</b>
+          <!-- End View Modal -->
+     
+           <!-- Map Modal -->
+           <div *ngIf="activeModal === 'map' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
+             <div class="modal-content" (click)="$event.stopPropagation()">
+               <div class="form-header">
+                 <h2>Parcel Route Map</h2>
+                 <button class="close-btn" (click)="closeModal()">
+                   <span class="material-icons">close</span>
+                 </button>
                </div>
-               <div style="height: 350px; width: 100%; margin: 0 auto;">
-                 <ng-container *ngIf="leafletFitBounds as bounds; else noMap">
-                   <div
-                     leaflet
-                     [leafletOptions]="leafletOptions"
-                     [leafletFitBounds]="bounds"
-                     [leafletLayers]="leafletLayers"
-                     style="height: 100%; width: 100%; border-radius: 1rem; box-shadow: var(--shadow-md);"
-                   ></div>
-                 </ng-container>
-                 <ng-template #noMap>
-                   <div style="margin-top: 1rem; color: var(--gray-500); font-size: 0.95em;">
-                     (Unable to load map for these addresses)
-                   </div>
-                 </ng-template>
+               <div style="padding: 2rem; text-align: center;">
+                 <div style="margin-bottom: 1rem; font-size: 1.1em;">
+                   <b>{{ selectedOrder.origin }}</b>
+                   <span class="material-icons" style="vertical-align: middle; font-size: 1.2em; color: var(--primary-600);">arrow_forward</span>
+                   <b>{{ selectedOrder.destination }}</b>
+                 </div>
+                 <div style="height: 350px; width: 100%; margin: 0 auto;">
+                   <ng-container *ngIf="leafletFitBounds as bounds; else noMap">
+                     <div
+                       leaflet
+                       [leafletOptions]="leafletOptions"
+                       [leafletFitBounds]="bounds"
+                       [leafletLayers]="leafletLayers"
+                       style="height: 100%; width: 100%; border-radius: 1rem; box-shadow: var(--shadow-md);"
+                     ></div>
+                   </ng-container>
+                   <ng-template #noMap>
+                     <div style="margin-top: 1rem; color: var(--gray-500); font-size: 0.95em;">
+                       (Unable to load map for these addresses)
+                     </div>
+                   </ng-template>
+                 </div>
                </div>
-             </div>
-             <div class="form-actions">
-               <button type="button" class="btn btn-outline" (click)="closeModal()">Close</button>
+               <div class="form-actions">
+                 <button type="button" class="btn btn-outline" (click)="closeModal()">Close</button>
+               </div>
              </div>
            </div>
-         </div>
-         <!-- End Map Modal -->
+           <!-- End Map Modal -->
 
-        <div class="orders-section">
-          <div class="section-header">
-            <h2>Recent Orders</h2>
-            <div class="section-actions">
-              <button class="btn btn-outline">
-                <span class="material-icons">download</span>
-                Export
-              </button>
-            </div>
-          </div>
-          <div class="orders-table">
-            <div class="table-header">
-              <div class="table-cell">Tracking #</div>
-              <div class="table-cell">Sender</div>
-              <div class="table-cell">Recipient</div>
-              <div class="table-cell">Route</div>
-              <div class="table-cell">Weight</div>
-              <div class="table-cell">Status</div>
-              <div class="table-cell">Actions</div>
-            </div>
-            <div class="table-row" *ngFor="let order of recentOrders">
-              <div class="table-cell">
-                <span class="tracking-number">{{ order.trackingNumber }}</span>
+          <div class="orders-section">
+            <div class="section-header">
+              <h2>Recent Orders</h2>
+              <div class="section-actions">
+                <button class="btn btn-outline">
+                  <span class="material-icons">download</span>
+                  Export
+                </button>
               </div>
-              <div class="table-cell">{{ order.sender }}</div>
-              <div class="table-cell">{{ order.recipient }}</div>
-              <div class="table-cell">
-                <div class="route">
-                  <span class="origin">{{ order.origin }}</span>
-                  <span class="material-icons">arrow_forward</span>
-                  <span class="destination">{{ order.destination }}</span>
+            </div>
+            <div class="orders-table">
+              <div class="table-header">
+                <div class="table-cell">Tracking #</div>
+                <div class="table-cell">Sender</div>
+                <div class="table-cell">Recipient</div>
+                <div class="table-cell">Route</div>
+                <div class="table-cell">Weight</div>
+                <div class="table-cell">Status</div>
+                <div class="table-cell">Pricing</div>
+                <div class="table-cell">Actions</div>
+              </div>
+              <div class="table-row" *ngFor="let order of recentOrders">
+                <div class="table-cell">
+                  <span class="tracking-number">{{ order.trackingNumber }}</span>
+                </div>
+                <div class="table-cell">{{ order.sender }}</div>
+                <div class="table-cell">{{ order.recipient }}</div>
+                <div class="table-cell">
+                  <div class="route">
+                    <span class="origin">{{ order.origin }}</span>
+                    <span class="material-icons">arrow_forward</span>
+                    <span class="destination">{{ order.destination }}</span>
+                  </div>
+                </div>
+                <div class="table-cell">{{ order.weight }}kg</div>
+                <div class="table-cell">
+                  <span class="status-badge" [ngClass]="'status-' + order.status.toLowerCase().replace(' ', '-')">
+                    {{ order.status }}
+                  </span>
+                </div>
+                <div class="table-cell">
+                  <span class="pricing-value">₦{{ order.pricing | number:'1.0-0' }}</span>
+                </div>
+                <div class="table-cell">
+                  <div class="action-buttons">
+                    <button class="action-btn" (click)="openModal('edit', order)">
+                      <span class="material-icons">edit</span>
+                    </button>
+                    <button class="action-btn" (click)="openModal('view', order)">
+                      <span class="material-icons">visibility</span>
+                    </button>
+                    <button class="action-btn" (click)="openModal('map', order)">
+                      <span class="material-icons">map</span>
+                    </button>
+                    <button class="action-btn" (click)="deleteOrder(order)">
+                      <span class="material-icons">delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div class="table-cell">{{ order.weight }}kg</div>
-              <div class="table-cell">
-                <span class="status-badge" [ngClass]="'status-' + order.status.toLowerCase().replace(' ', '-')">
-                  {{ order.status }}
-                </span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="activeTab === 'users'">
+          <div class="user-management">
+            <div class="user-header">
+              <h2>User Management</h2>
+            </div>
+            <div class="users-table">
+              <div class="table-header">
+                <div class="table-cell">User ID</div>
+                <div class="table-cell">Name</div>
+                <div class="table-cell">Email</div>
+                <div class="table-cell">Phone</div>
+                <div class="table-cell">Total Packages</div>
+                <div class="table-cell">Status</div>
+                <div class="table-cell">Join Date</div>
+                <div class="table-cell">Actions</div>
               </div>
-              <div class="table-cell">
-                <div class="action-buttons">
-                  <button class="action-btn" (click)="openModal('edit', order)">
-                    <span class="material-icons">edit</span>
-                  </button>
-                  <button class="action-btn" (click)="openModal('view', order)">
-                    <span class="material-icons">visibility</span>
-                  </button>
-                  <button class="action-btn" (click)="openModal('map', order)">
-                    <span class="material-icons">map</span>
-                  </button>
+              <div class="table-row" *ngFor="let user of users">
+                <div class="table-cell">{{ user.id }}</div>
+                <div class="table-cell">{{ user.name }}</div>
+                <div class="table-cell">{{ user.email }}</div>
+                <div class="table-cell">{{ user.phone }}</div>
+                <div class="table-cell">{{ user.totalPackages }}</div>
+                <div class="table-cell">
+                  <span class="status-badge" [ngClass]="user.status === 'Active' ? 'status-active' : 'status-inactive'">
+                    {{ user.status }}
+                  </span>
+                </div>
+                <div class="table-cell">{{ user.joinDate }}</div>
+                <div class="table-cell">
+                  <div class="action-buttons">
+                    <button class="action-btn" (click)="deleteUser(user)"><span class="material-icons">delete</span></button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </ng-container>
       </div>
     </div>
   `,
@@ -451,7 +521,7 @@ interface ParcelOrder {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 2rem;
+      padding: 1rem 16rem;
       background: #fff;
       border-bottom: 1px solid #e5e7eb;
       box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);
@@ -979,6 +1049,62 @@ interface ParcelOrder {
     }
     /* End Toast Styles */
 
+    .admin-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      margin-left: 16rem;
+      margin-right: 16rem;
+    }
+    .admin-tabs button {
+      background: #f3f4f6;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+      font-weight: 500;
+      color: #22223b;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .admin-tabs button.active {
+      background: linear-gradient(90deg, #6366f1 0%, #a5b4fc 100%);
+      color: #fff;
+    }
+    .user-management {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);
+      padding: 2rem;
+      margin-top: 1rem;
+    }
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .users-table {
+      width: 100%;
+    }
+    .status-badge.status-active {
+      background: #d1fae5;
+      color: #059669;
+      border-radius: 0.75rem;
+      padding: 0.25rem 0.9rem;
+      font-size: 0.95em;
+      font-weight: 500;
+      display: inline-block;
+    }
+    .status-badge.status-inactive {
+      background: #fee2e2;
+      color: #dc2626;
+      border-radius: 0.75rem;
+      padding: 0.25rem 0.9rem;
+      font-size: 0.95em;
+      font-weight: 500;
+      display: inline-block;
+    }
+
     @media (max-width: 1024px) {
       .header-content {
         flex-direction: column;
@@ -1013,13 +1139,54 @@ interface ParcelOrder {
         overflow-x: scroll;
       }
     }
+    .orders-table {
+      width: 100%;
+    }
+    .table-header, .table-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      min-height: 56px;
+    }
+    .table-cell {
+      flex: 1 1 0;
+      padding: 0.75rem 0.5rem;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      min-height: 56px;
+      justify-content: flex-start;
+    }
+    .table-cell:last-child {
+      flex: 0 0 auto;
+      min-width: 120px;
+      justify-content: center;
+    }
+    .table-header .table-cell {
+      font-weight: 600;
+      color: #22223b;
+      justify-content: flex-start;
+      text-align: left;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-start;
+      align-items: center;
+    }
+    .pricing-value {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
   `]
 })
 export class AdminDashboardComponent implements OnInit {
   showCreateForm = false;
   isCreating = false;
   parcelForm: FormGroup;
-
+  editForm!: FormGroup;
   stats: AdminStats = {
     totalParcels: 1247,
     pendingParcels: 32,
@@ -1028,7 +1195,6 @@ export class AdminDashboardComponent implements OnInit {
     totalRevenue: 89750,
     activeUsers: 428
   };
-
   recentOrders: ParcelOrder[] = [
     {
       id: '1',
@@ -1039,7 +1205,8 @@ export class AdminDashboardComponent implements OnInit {
       weight: 2.5,
       status: 'In Transit',
       createdAt: new Date('2025-01-15'),
-      trackingNumber: 'ST123456789'
+      trackingNumber: 'ST123456789',
+      pricing: 1200
     },
     {
       id: '2',
@@ -1050,7 +1217,8 @@ export class AdminDashboardComponent implements OnInit {
       weight: 1.8,
       status: 'Pending',
       createdAt: new Date('2025-01-14'),
-      trackingNumber: 'ST123456790'
+      trackingNumber: 'ST123456790',
+      pricing: 500
     },
     {
       id: '3',
@@ -1061,13 +1229,12 @@ export class AdminDashboardComponent implements OnInit {
       weight: 3.2,
       status: 'Delivered',
       createdAt: new Date('2025-01-13'),
-      trackingNumber: 'ST123456791'
+      trackingNumber: 'ST123456791',
+      pricing: 2000
     }
   ];
-
   activeModal: 'edit' | 'view' | 'map' | null = null;
   selectedOrder: ParcelOrder | null = null;
-  editForm!: FormGroup;
   leafletOptions = {
     layers: [L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 })],
     zoom: 5,
@@ -1076,8 +1243,6 @@ export class AdminDashboardComponent implements OnInit {
   leafletMarkers: L.Marker[] = [];
   leafletPolyline: L.Polyline | null = null;
   leafletFitBounds: L.LatLngBounds | null = null;
-
-  // Add state for settings modal and tab
   settingsModalOpen = false;
   settingsTab: 'profile' | 'notifications' | 'security' = 'profile';
   settingsProfile = {
@@ -1091,22 +1256,31 @@ export class AdminDashboardComponent implements OnInit {
     sms: false,
     push: true
   };
-
-  // Add toast state
   showSettingsToast = false;
   settingsToastMsg = '';
   settingsToastTimeout: any = null;
+  activeTab: 'packages' | 'users' = 'packages';
+  users: AdminUser[] = [
+    { id: 'USR001', name: 'John Doe', email: 'john.doe@email.com', phone: '+234 801 234 5678', totalPackages: 12, status: 'Active', joinDate: '2023-08-15' },
+    { id: 'USR002', name: 'Jane Smith', email: 'jane.smith@email.com', phone: '+234 802 345 6789', totalPackages: 8, status: 'Active', joinDate: '2023-09-22' },
+    { id: 'USR003', name: 'Bob Wilson', email: 'bob.wilson@email.com', phone: '+234 803 456 7890', totalPackages: 15, status: 'Inactive', joinDate: '2023-07-10' },
+  ];
+  addUser() { alert('Add user functionality coming soon!'); }
+  viewUser(user: AdminUser) { alert('View user: ' + user.name); }
+  editUser(user: AdminUser) { alert('Edit user: ' + user.name); }
+  deleteUser(user: AdminUser) { alert('Delete user: ' + user.name); }
 
   constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
     this.parcelForm = this.fb.group({
-      senderName: ['', [Validators.required]],
-      senderPhone: ['', [Validators.required]],
-      recipientName: ['', [Validators.required]],
-      recipientPhone: ['', [Validators.required]],
-      origin: ['', [Validators.required]],
-      destination: ['', [Validators.required]],
-      weight: ['', [Validators.required, Validators.min(0.1)]],
-      category: ['', [Validators.required]]
+      senderName: ['', Validators.required],
+      senderPhone: ['', Validators.required],
+      recipientName: ['', Validators.required],
+      recipientPhone: ['', Validators.required],
+      origin: ['', Validators.required],
+      destination: ['', Validators.required],
+      weight: [null, [Validators.required, Validators.min(0.1)]],
+      category: ['', Validators.required],
+      pricing: [500, Validators.required],
     });
     this.editForm = this.fb.group({
       status: ['', [Validators.required]],
@@ -1123,14 +1297,10 @@ export class AdminDashboardComponent implements OnInit {
   createParcel(): void {
     if (this.parcelForm.valid) {
       this.isCreating = true;
-      
-      // Simulate API call
       setTimeout(() => {
         this.isCreating = false;
         this.showCreateForm = false;
         this.parcelForm.reset();
-        
-        // Add new order to the list (demo purposes)
         const newOrder: ParcelOrder = {
           id: (this.recentOrders.length + 1).toString(),
           sender: this.parcelForm.value.senderName,
@@ -1140,9 +1310,9 @@ export class AdminDashboardComponent implements OnInit {
           weight: this.parcelForm.value.weight,
           status: 'Pending',
           createdAt: new Date(),
-          trackingNumber: 'ST' + Math.random().toString().substr(2, 9)
+          trackingNumber: 'ST' + Math.random().toString().substr(2, 9),
+          pricing: this.parcelForm.value.pricing
         };
-        
         this.recentOrders.unshift(newOrder);
         this.stats.totalParcels++;
         this.stats.pendingParcels++;
@@ -1151,7 +1321,6 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   updateStatus(orderId: string): void {
-    // Implement status update logic
     console.log('Update status for order:', orderId);
   }
 
@@ -1234,35 +1403,24 @@ export class AdminDashboardComponent implements OnInit {
 
   copyTrackingNumber(tracking: string) {
     navigator.clipboard.writeText(tracking);
+    this.showSettingsToastMsg('Tracking number copied!');
   }
 
   get leafletLayers(): L.Layer[] {
-    const layers: L.Layer[] = [];
-    if (this.leafletMarkers) layers.push(...this.leafletMarkers);
+    const layers: L.Layer[] = [...this.leafletMarkers];
     if (this.leafletPolyline) layers.push(this.leafletPolyline);
     return layers;
   }
 
-  // Add methods for settings modal
   openSettings() { this.settingsModalOpen = true; this.settingsTab = 'profile'; }
   closeSettings() { this.settingsModalOpen = false; }
   selectSettingsTab(tab: 'profile' | 'notifications' | 'security') { this.settingsTab = tab; }
-
-  // Add save methods for each tab
   saveProfile() {
-    if (!this.settingsProfile.fullName || !this.settingsProfile.email || !this.settingsProfile.phone || !this.settingsProfile.address) {
-      this.showSettingsToastMsg('Please fill in all fields.');
-      return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(this.settingsProfile.email)) {
-      this.showSettingsToastMsg('Please enter a valid email address.');
-      return;
-    }
-    this.showSettingsToastMsg('Profile updated successfully!');
+    this.showSettingsToastMsg('Profile updated!');
     this.closeSettings();
   }
   saveNotifications() {
-    this.showSettingsToastMsg('Notification preferences saved!');
+    this.showSettingsToastMsg('Notification preferences updated!');
     this.closeSettings();
   }
   saveSecurity() {
@@ -1276,11 +1434,15 @@ export class AdminDashboardComponent implements OnInit {
     this.settingsToastTimeout = setTimeout(() => {
       this.showSettingsToast = false;
       this.settingsToastMsg = '';
-    }, 2500);
+    }, 2000);
+  }
+  logout() {
+    // Implement logout logic
+    this.router.navigate(['/']);
   }
 
-  logout() {
-    // Optionally clear any session/local storage here
-    this.router.navigate(['/']);
+  deleteOrder(order: ParcelOrder) {
+    // TODO: Implement delete logic
+    alert('Delete order: ' + order.trackingNumber);
   }
 }
