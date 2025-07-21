@@ -5,6 +5,8 @@ import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { AdminService } from '../../../shared/services/admin.service';
+// Remove: import { NgSelectModule } from '@ng-select/ng-select';
 
 interface AdminStats {
   totalParcels: number;
@@ -42,7 +44,13 @@ interface AdminUser {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, LeafletModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    LeafletModule,
+    // Remove: NgSelectModule, // Ensure NgSelectModule is included here
+  ],
   template: `
     <nav class="admin-navbar">
       <div class="navbar-left">
@@ -159,7 +167,7 @@ interface AdminUser {
                 <span class="material-icons">inventory</span>
               </div>
               <div class="stat-info">
-                <h3>{{ stats.totalParcels }}</h3>
+                <h3>{{ stats?.totalParcels }}</h3>
                 <p>Total Parcels</p>
               </div>
             </div>
@@ -169,7 +177,7 @@ interface AdminUser {
                 <span class="material-icons">schedule</span>
               </div>
               <div class="stat-info">
-                <h3>{{ stats.pendingParcels }}</h3>
+                <h3>{{ stats?.pendingParcels }}</h3>
                 <p>Pending</p>
               </div>
             </div>
@@ -179,7 +187,7 @@ interface AdminUser {
                 <span class="material-icons">local_shipping</span>
               </div>
               <div class="stat-info">
-                <h3>{{ stats.inTransitParcels }}</h3>
+                <h3>{{ stats?.inTransitParcels }}</h3>
                 <p>In Transit</p>
               </div>
             </div>
@@ -189,7 +197,7 @@ interface AdminUser {
                 <span class="material-icons">check_circle</span>
               </div>
               <div class="stat-info">
-                <h3>{{ stats.deliveredParcels }}</h3>
+                <h3>{{ stats?.deliveredParcels }}</h3>
                 <p>Delivered</p>
               </div>
             </div>
@@ -199,7 +207,7 @@ interface AdminUser {
                 <span class="material-icons">attach_money</span>
               </div>
               <div class="stat-info">
-                <h3>\${{ stats.totalRevenue.toLocaleString() }}</h3>
+                <h3>\${{ (stats?.totalRevenue ?? 0).toLocaleString() }}</h3>
                 <p>Total Revenue</p>
               </div>
             </div>
@@ -209,7 +217,7 @@ interface AdminUser {
                 <span class="material-icons">people</span>
               </div>
               <div class="stat-info">
-                <h3>{{ stats.activeUsers }}</h3>
+                <h3>{{ stats?.activeUsers }}</h3>
                 <p>Active Users</p>
               </div>
             </div>
@@ -227,20 +235,14 @@ interface AdminUser {
               <form [formGroup]="parcelForm" (ngSubmit)="createParcel()">
                 <div class="form-grid">
                   <div class="form-group">
-                    <label for="senderName" class="form-label">Sender Name</label>
-                    <input type="text" id="senderName" class="form-control" placeholder="Enter sender name" formControlName="senderName" />
+                    <label for="sender" class="form-label">Sender Email</label>
+                    <input #senderEmailInput type="email" id="sender" class="form-control" placeholder="Enter sender email" (blur)="setSenderByEmail(senderEmailInput.value)" />
+                    <div *ngIf="senderEmailError" class="text-danger">Sender email not found.</div>
                   </div>
                   <div class="form-group">
-                    <label for="senderPhone" class="form-label">Sender Phone</label>
-                    <input type="tel" id="senderPhone" class="form-control" placeholder="Enter sender phone" formControlName="senderPhone" />
-                  </div>
-                  <div class="form-group">
-                    <label for="recipientName" class="form-label">Recipient Name</label>
-                    <input type="text" id="recipientName" class="form-control" placeholder="Enter recipient name" formControlName="recipientName" />
-                  </div>
-                  <div class="form-group">
-                    <label for="recipientPhone" class="form-label">Recipient Phone</label>
-                    <input type="tel" id="recipientPhone" class="form-control" placeholder="Enter recipient phone" formControlName="recipientPhone" />
+                    <label for="recipient" class="form-label">Recipient Email</label>
+                    <input #recipientEmailInput type="email" id="recipient" class="form-control" placeholder="Enter recipient email" (blur)="setRecipientByEmail(recipientEmailInput.value)" />
+                    <div *ngIf="recipientEmailError" class="text-danger">Recipient email not found.</div>
                   </div>
                   <div class="form-group">
                     <label for="origin" class="form-label">Pickup Location</label>
@@ -249,10 +251,6 @@ interface AdminUser {
                   <div class="form-group">
                     <label for="destination" class="form-label">Destination</label>
                     <input type="text" id="destination" class="form-control" placeholder="Enter destination address" formControlName="destination" />
-                  </div>
-                  <div class="form-group">
-                    <label for="weight" class="form-label">Weight (kg)</label>
-                    <input type="number" id="weight" class="form-control" placeholder="Enter weight" formControlName="weight" step="0.1" min="0" />
                   </div>
                   <div class="form-group">
                     <label for="category" class="form-label">Category</label>
@@ -326,10 +324,6 @@ interface AdminUser {
                   <div class="form-group">
                     <label>Destination</label>
                     <input class="form-control" formControlName="destination" />
-                  </div>
-                  <div class="form-group">
-                    <label>Weight (kg)</label>
-                    <input type="number" class="form-control" formControlName="weight" min="0.1" step="0.1" />
                   </div>
                 </div>
                 <div class="form-actions">
@@ -483,7 +477,6 @@ interface AdminUser {
             </div>
             <div class="users-table">
               <div class="table-header">
-                <div class="table-cell">User ID</div>
                 <div class="table-cell">Name</div>
                 <div class="table-cell">Email</div>
                 <div class="table-cell">Phone</div>
@@ -493,7 +486,6 @@ interface AdminUser {
                 <div class="table-cell">Actions</div>
               </div>
               <div class="table-row" *ngFor="let user of users">
-                <div class="table-cell">{{ user.id }}</div>
                 <div class="table-cell">{{ user.name }}</div>
                 <div class="table-cell">{{ user.email }}</div>
                 <div class="table-cell">{{ user.phone }}</div>
@@ -1187,52 +1179,8 @@ export class AdminDashboardComponent implements OnInit {
   isCreating = false;
   parcelForm: FormGroup;
   editForm!: FormGroup;
-  stats: AdminStats = {
-    totalParcels: 1247,
-    pendingParcels: 32,
-    inTransitParcels: 156,
-    deliveredParcels: 1059,
-    totalRevenue: 89750,
-    activeUsers: 428
-  };
-  recentOrders: ParcelOrder[] = [
-    {
-      id: '1',
-      sender: 'John Doe',
-      recipient: 'Sarah Johnson',
-      origin: 'San Francisco, CA',
-      destination: 'New York, NY',
-      weight: 2.5,
-      status: 'In Transit',
-      createdAt: new Date('2025-01-15'),
-      trackingNumber: 'ST123456789',
-      pricing: 1200
-    },
-    {
-      id: '2',
-      sender: 'Mike Smith',
-      recipient: 'Emily Davis',
-      origin: 'Los Angeles, CA',
-      destination: 'Chicago, IL',
-      weight: 1.8,
-      status: 'Pending',
-      createdAt: new Date('2025-01-14'),
-      trackingNumber: 'ST123456790',
-      pricing: 500
-    },
-    {
-      id: '3',
-      sender: 'Lisa Brown',
-      recipient: 'David Wilson',
-      origin: 'Seattle, WA',
-      destination: 'Miami, FL',
-      weight: 3.2,
-      status: 'Delivered',
-      createdAt: new Date('2025-01-13'),
-      trackingNumber: 'ST123456791',
-      pricing: 2000
-    }
-  ];
+  stats?: AdminStats;
+  recentOrders: ParcelOrder[] = [];
   activeModal: 'edit' | 'view' | 'map' | null = null;
   selectedOrder: ParcelOrder | null = null;
   leafletOptions = {
@@ -1260,25 +1208,51 @@ export class AdminDashboardComponent implements OnInit {
   settingsToastMsg = '';
   settingsToastTimeout: any = null;
   activeTab: 'packages' | 'users' = 'packages';
-  users: AdminUser[] = [
-    { id: 'USR001', name: 'John Doe', email: 'john.doe@email.com', phone: '+234 801 234 5678', totalPackages: 12, status: 'Active', joinDate: '2023-08-15' },
-    { id: 'USR002', name: 'Jane Smith', email: 'jane.smith@email.com', phone: '+234 802 345 6789', totalPackages: 8, status: 'Active', joinDate: '2023-09-22' },
-    { id: 'USR003', name: 'Bob Wilson', email: 'bob.wilson@email.com', phone: '+234 803 456 7890', totalPackages: 15, status: 'Inactive', joinDate: '2023-07-10' },
-  ];
+  users: AdminUser[] = [];
   addUser() { alert('Add user functionality coming soon!'); }
   viewUser(user: AdminUser) { alert('View user: ' + user.name); }
   editUser(user: AdminUser) { alert('Edit user: ' + user.name); }
   deleteUser(user: AdminUser) { alert('Delete user: ' + user.name); }
+  // Remove senderSearch and recipientSearch
+  // Add custom search function for ng-select
+  // Remove: customUserSearchFn method
+  // Remove senderSearch, recipientSearch, filteredSenderUsers, and filteredRecipientUsers
+  senderEmailError: boolean = false;
+  recipientEmailError: boolean = false;
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
+  setSenderByEmail(email: string) {
+    const user = this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+      this.parcelForm.get('sender')?.setValue(user.id);
+      this.senderEmailError = false;
+    } else {
+      this.parcelForm.get('sender')?.setValue('');
+      this.senderEmailError = true;
+    }
+  }
+
+  setRecipientByEmail(email: string) {
+    const user = this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+      this.parcelForm.get('recipient')?.setValue(user.id);
+      this.recipientEmailError = false;
+    } else {
+      this.parcelForm.get('recipient')?.setValue('');
+      this.recipientEmailError = true;
+    }
+  }
+
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private router: Router,
+    private adminService: AdminService
+  ) {
     this.parcelForm = this.fb.group({
-      senderName: ['', Validators.required],
-      senderPhone: ['', Validators.required],
-      recipientName: ['', Validators.required],
-      recipientPhone: ['', Validators.required],
+      sender: ['', Validators.required], // user ID
+      recipient: ['', Validators.required], // user ID
       origin: ['', Validators.required],
       destination: ['', Validators.required],
-      weight: [null, [Validators.required, Validators.min(0.1)]],
       category: ['', Validators.required],
       pricing: [500, Validators.required],
     });
@@ -1288,35 +1262,49 @@ export class AdminDashboardComponent implements OnInit {
       recipient: ['', [Validators.required]],
       origin: ['', [Validators.required]],
       destination: ['', [Validators.required]],
-      weight: ['', [Validators.required, Validators.min(0.1)]]
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    console.log('ngOnInit called');
+    this.loadStats();
+    this.loadParcels();
+    this.loadUsers();
+  }
+
+  loadStats() {
+    this.adminService.getStats().subscribe(stats => {
+      this.stats = stats;
+    });
+  }
+
+  loadParcels() {
+    this.adminService.getParcels().subscribe(res => {
+      this.recentOrders = res.data || res;
+    });
+  }
+
+  loadUsers() {
+    this.adminService.getUsers().subscribe(res => {
+      this.users = res.data || res;
+    });
+  }
 
   createParcel(): void {
     if (this.parcelForm.valid) {
       this.isCreating = true;
-      setTimeout(() => {
-        this.isCreating = false;
-        this.showCreateForm = false;
-        this.parcelForm.reset();
-        const newOrder: ParcelOrder = {
-          id: (this.recentOrders.length + 1).toString(),
-          sender: this.parcelForm.value.senderName,
-          recipient: this.parcelForm.value.recipientName,
-          origin: this.parcelForm.value.origin,
-          destination: this.parcelForm.value.destination,
-          weight: this.parcelForm.value.weight,
-          status: 'Pending',
-          createdAt: new Date(),
-          trackingNumber: 'ST' + Math.random().toString().substr(2, 9),
-          pricing: this.parcelForm.value.pricing
-        };
-        this.recentOrders.unshift(newOrder);
-        this.stats.totalParcels++;
-        this.stats.pendingParcels++;
-      }, 1500);
+      this.adminService.createParcel(this.parcelForm.value).subscribe({
+        next: (newOrder) => {
+          this.isCreating = false;
+          this.showCreateForm = false;
+          this.parcelForm.reset();
+          this.loadParcels();
+          this.loadStats();
+        },
+        error: () => {
+          this.isCreating = false;
+        }
+      });
     }
   }
 
@@ -1334,7 +1322,6 @@ export class AdminDashboardComponent implements OnInit {
         recipient: order.recipient,
         origin: order.origin,
         destination: order.destination,
-        weight: order.weight
       });
     }
     if (type === 'map') {
@@ -1385,14 +1372,12 @@ export class AdminDashboardComponent implements OnInit {
 
   saveEdit() {
     if (this.editForm.valid && this.selectedOrder) {
-      const idx = this.recentOrders.findIndex(o => o.id === this.selectedOrder!.id);
-      if (idx > -1) {
-        this.recentOrders[idx] = {
-          ...this.recentOrders[idx],
-          ...this.editForm.value
-        };
-      }
-      this.closeModal();
+      this.adminService.updateParcelStatus(this.selectedOrder.id, this.editForm.value.status).subscribe({
+        next: () => {
+          this.loadParcels();
+          this.closeModal();
+        }
+      });
     }
   }
 
@@ -1442,7 +1427,11 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   deleteOrder(order: ParcelOrder) {
-    // TODO: Implement delete logic
-    alert('Delete order: ' + order.trackingNumber);
+    this.adminService.deleteParcel(order.id).subscribe({
+      next: () => {
+        this.loadParcels();
+        this.loadStats();
+      }
+    });
   }
 }

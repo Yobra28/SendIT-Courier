@@ -1,14 +1,10 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { IsUUID, IsNumber, Min, IsString, IsNotEmpty } from 'class-validator';
+import { IsUUID, IsString, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateParcelDto {
   @IsUUID()
   receiverId: string;
-
-  @IsNumber()
-  @Min(0.01)
-  weight: number;
 
   @IsString()
   @IsNotEmpty()
@@ -17,4 +13,7 @@ export class CreateParcelDto {
   @IsString()
   @IsNotEmpty()
   destination: string;
+
+  @IsNumber()
+  pricing: number;
 } 

@@ -24,18 +24,27 @@ export class ParcelsService {
   ) {}
 
   async create(createParcelDto: CreateParcelDto, adminId: string) {
-    // createParcelDto should include receiverId, weight, pickupLocation, destination
+    // Generate tracking number and set pricing based on frontend options
+    const trackingNumber = 'ST' + Math.random().toString().substr(2, 9);
+    // Accept pricing from DTO, default to 500 (Standard)
+    const allowedPricing = [500, 1200, 2000];
+    let pricing = Number(createParcelDto.pricing);
+    if (!allowedPricing.includes(pricing)) {
+      pricing = 500;
+    }
     const parcel = await this.prisma.parcel.create({
       data: {
         senderId: adminId,
         receiverId: createParcelDto.receiverId,
-        weight: createParcelDto.weight,
         pickupLocation: createParcelDto.pickupLocation,
         destination: createParcelDto.destination,
         status: 'PENDING',
+        trackingNumber,
+        pricing,
       },
+      include: { sender: true, receiver: true },
     });
-    return parcel;
+    return this.toParcelOrder(parcel);
   }
 
   async getSentParcels(userId: string, options: ParcelListOptions = {}) {
@@ -51,11 +60,11 @@ export class ParcelsService {
       ];
     }
     const [parcels, total] = await Promise.all([
-      this.prisma.parcel.findMany({ where, skip, take: limit }),
+      this.prisma.parcel.findMany({ where, skip, take: limit, include: { sender: true, receiver: true } }),
       this.prisma.parcel.count({ where }),
     ]);
     return {
-      data: parcels,
+      data: parcels.map(this.toParcelOrder),
       meta: {
         total,
         page,
@@ -78,11 +87,11 @@ export class ParcelsService {
       ];
     }
     const [parcels, total] = await Promise.all([
-      this.prisma.parcel.findMany({ where, skip, take: limit }),
+      this.prisma.parcel.findMany({ where, skip, take: limit, include: { sender: true, receiver: true } }),
       this.prisma.parcel.count({ where }),
     ]);
     return {
-      data: parcels,
+      data: parcels.map(this.toParcelOrder),
       meta: {
         total,
         page,
@@ -92,18 +101,21 @@ export class ParcelsService {
     };
   }
 
+  async getAllParcels() {
+    const parcels = await this.prisma.parcel.findMany({
+      where: { deletedAt: null },
+      include: { sender: true, receiver: true },
+    });
+    return parcels.map(this.toParcelOrder);
+  }
+
   async updateStatus(id: string, status: string) {
     const parcel = await this.prisma.parcel.update({
       where: { id },
       data: { status: status as ParcelStatus },
+      include: { sender: true, receiver: true },
     });
-    // Fetch receiver's email
-    const receiver = await this.prisma.user.findUnique({ where: { id: parcel.receiverId } });
-    if (receiver && receiver.email) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      await this.emailService.sendStatusUpdateEmail(receiver.email, parcel);
-    }
-    return parcel;
+    return this.toParcelOrder(parcel);
   }
 
   async softDelete(id: string) {
@@ -111,5 +123,20 @@ export class ParcelsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
+  }
+
+  // Helper to map DB parcel to ParcelOrder shape
+  toParcelOrder(parcel: any) {
+    return {
+      id: parcel.id,
+      sender: parcel.sender?.name || '',
+      recipient: parcel.receiver?.name || '',
+      origin: parcel.pickupLocation,
+      destination: parcel.destination,
+      status: parcel.status,
+      createdAt: parcel.createdAt,
+      trackingNumber: parcel.trackingNumber,
+      pricing: parcel.pricing,
+    };
   }
 }

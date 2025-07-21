@@ -43,6 +43,13 @@ export class ParcelsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
+  @Get()
+  async getAllParcels() {
+    return this.parcelsService.getAllParcels();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Patch(':id/status')
   async updateStatus(
     @Param('id', new ParseUUIDPipe()) id: string,

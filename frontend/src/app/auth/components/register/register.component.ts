@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../../shared/services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -230,10 +231,12 @@ export class RegisterComponent {
   registerForm: FormGroup;
   isLoading = false;
   @Input() inModal = false;
+  registerError = '';
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.registerForm = this.fb.group({
       firstName: ['', [Validators.required]],
@@ -261,13 +264,31 @@ export class RegisterComponent {
   }
 
   onRegister() {
+    console.log('onRegister called', this.registerForm.value, this.registerForm.valid);
     if (this.registerForm.valid) {
       this.isLoading = true;
-      // Simulate API call
-      setTimeout(() => {
-        this.isLoading = false;
-        this.router.navigate(['/auth/login']);
-      }, 1500);
+      this.registerError = '';
+      const { firstName, lastName, email, phone, password } = this.registerForm.value;
+      const registerPayload = {
+        name: `${firstName} ${lastName}`,
+        email,
+        phone,
+        password,
+        role: 'USER'
+      };
+      console.log('Register attempt:', registerPayload);
+      this.authService.register(registerPayload).subscribe({
+        next: (res) => {
+          this.isLoading = false;
+          console.log('Register success:', res);
+          this.router.navigate(['/auth/login']);
+        },
+        error: (err) => {
+          this.isLoading = false;
+          console.error('Register error:', err);
+          this.registerError = err.error?.message || 'Registration failed. Please try again.';
+        }
+      });
     }
   }
 }

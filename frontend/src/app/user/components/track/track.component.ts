@@ -408,50 +408,94 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
     // Simulate API call
     setTimeout(() => {
       this.isLoading = false;
-      
-      // Mock tracking data
-      if (this.trackingNumber.toLowerCase().includes('st123456789')) {
+      const tn = this.trackingNumber.trim().toUpperCase();
+      if (tn === 'SENT123456') {
+        this.trackingResult = {
+          recipient: 'John Doe',
+          destination: 'Lagos, NG',
+          trackingNumber: this.trackingNumber,
+          status: 'Delivered',
+          steps: [
+            { status: 'Package Received', description: 'Package received at facility', location: 'Abuja, NG', timestamp: new Date('2025-01-10T08:00:00'), completed: true },
+            { status: 'Processing', description: 'Processing for shipment', location: 'Abuja, NG', timestamp: new Date('2025-01-10T10:00:00'), completed: true },
+            { status: 'In Transit', description: 'On the way to Lagos', location: 'Onitsha, NG', timestamp: new Date('2025-01-11T09:00:00'), completed: true },
+            { status: 'Delivered', description: 'Package delivered', location: 'Lagos, NG', timestamp: new Date('2025-01-12T15:00:00'), completed: true }
+          ]
+        };
+      } else if (tn === 'SENT654321') {
+        this.trackingResult = {
+          recipient: 'Mike Smith',
+          destination: 'Chicago, IL',
+          trackingNumber: this.trackingNumber,
+          status: 'Pending',
+          steps: [
+            { status: 'Package Received', description: 'Package received at facility', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T08:00:00'), completed: true },
+            { status: 'Processing', description: 'Processing for shipment', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T10:30:00'), completed: true },
+            { status: 'Pending', description: 'Awaiting pickup by courier', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T12:00:00'), completed: false }
+          ]
+        };
+      } else if (tn === 'RECV789012') {
+        this.trackingResult = {
+          recipient: 'Sarah Johnson',
+          destination: 'Abuja, NG',
+          trackingNumber: this.trackingNumber,
+          status: 'In Transit',
+          steps: [
+            { status: 'Package Received', description: 'Package received at facility', location: 'Port Harcourt, NG', timestamp: new Date('2025-01-13T08:00:00'), completed: true },
+            { status: 'Processing', description: 'Processing for shipment', location: 'Port Harcourt, NG', timestamp: new Date('2025-01-13T10:00:00'), completed: true },
+            { status: 'In Transit', description: 'On the way to Abuja', location: 'Lokoja, NG', timestamp: new Date('2025-01-14T09:00:00'), completed: true },
+            { status: 'In Transit', description: 'Approaching Abuja', location: 'Abuja, NG', timestamp: new Date('2025-01-15T12:00:00'), completed: false }
+          ]
+        };
+      } else if (tn === 'RECV210987') {
+        this.trackingResult = {
+          recipient: 'Emily Davis',
+          destination: 'Ibadan, NG',
+          trackingNumber: this.trackingNumber,
+          status: 'Processing',
+          steps: [
+            { status: 'Package Received', description: 'Package received at facility', location: 'Kano, NG', timestamp: new Date('2025-01-12T08:00:00'), completed: true },
+            { status: 'Processing', description: 'Processing for shipment', location: 'Kano, NG', timestamp: new Date('2025-01-12T10:00:00'), completed: false }
+          ]
+        };
+      } else if (tn === 'ST123456789') {
         this.trackingResult = {
           recipient: 'Sarah Johnson',
           destination: 'New York, NY',
           trackingNumber: this.trackingNumber,
           status: 'In Transit',
           steps: [
-            {
-              status: 'Package Received',
-              description: 'Your package has been received at our facility',
-              location: 'San Francisco, CA',
-              timestamp: new Date('2025-01-15T08:00:00'),
-              completed: true
-            },
-            {
-              status: 'Processing',
-              description: 'Package is being processed and prepared for shipment',
-              location: 'San Francisco, CA',
-              timestamp: new Date('2025-01-15T10:30:00'),
-              completed: true
-            },
-            {
-              status: 'In Transit',
-              description: 'Package is on its way to destination',
-              location: 'Denver, CO',
-              timestamp: new Date('2025-01-16T14:20:00'),
-              completed: true
-            },
-            {
-              status: 'Out for Delivery',
-              description: 'Package is out for delivery',
-              location: 'New York, NY',
-              timestamp: new Date('2025-01-17T09:00:00'),
-              completed: false
-            },
-            {
-              status: 'Delivered',
-              description: 'Package has been delivered',
-              location: 'New York, NY',
-              timestamp: new Date('2025-01-17T15:00:00'),
-              completed: false
-            }
+            { status: 'Package Received', description: 'Your package has been received at our facility', location: 'San Francisco, CA', timestamp: new Date('2025-01-15T08:00:00'), completed: true },
+            { status: 'Processing', description: 'Package is being processed and prepared for shipment', location: 'San Francisco, CA', timestamp: new Date('2025-01-15T10:30:00'), completed: true },
+            { status: 'In Transit', description: 'Package is on its way to destination', location: 'Denver, CO', timestamp: new Date('2025-01-16T14:20:00'), completed: true },
+            { status: 'Out for Delivery', description: 'Package is out for delivery', location: 'New York, NY', timestamp: new Date('2025-01-17T09:00:00'), completed: false },
+            { status: 'Delivered', description: 'Package has been delivered', location: 'New York, NY', timestamp: new Date('2025-01-17T15:00:00'), completed: false }
+          ]
+        };
+      } else if (tn === 'ST123456790') {
+        this.trackingResult = {
+          recipient: 'Emily Davis',
+          destination: 'Chicago, IL',
+          trackingNumber: this.trackingNumber,
+          status: 'Delivered',
+          steps: [
+            { status: 'Package Received', description: 'Package received at facility', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T08:00:00'), completed: true },
+            { status: 'Processing', description: 'Processing for shipment', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T10:30:00'), completed: true },
+            { status: 'In Transit', description: 'On the way to Chicago', location: 'St. Louis, MO', timestamp: new Date('2025-01-15T09:00:00'), completed: true },
+            { status: 'Delivered', description: 'Package delivered', location: 'Chicago, IL', timestamp: new Date('2025-01-16T15:00:00'), completed: true }
+          ]
+        };
+      } else if (tn === 'ST123456791') {
+        this.trackingResult = {
+          recipient: 'David Wilson',
+          destination: 'Miami, FL',
+          trackingNumber: this.trackingNumber,
+          status: 'Delivered',
+          steps: [
+            { status: 'Package Received', description: 'Package received at facility', location: 'Seattle, WA', timestamp: new Date('2025-01-13T08:00:00'), completed: true },
+            { status: 'Processing', description: 'Processing for shipment', location: 'Seattle, WA', timestamp: new Date('2025-01-13T10:00:00'), completed: true },
+            { status: 'In Transit', description: 'On the way to Miami', location: 'Atlanta, GA', timestamp: new Date('2025-01-14T09:00:00'), completed: true },
+            { status: 'Delivered', description: 'Package delivered', location: 'Miami, FL', timestamp: new Date('2025-01-15T15:00:00'), completed: true }
           ]
         };
       } else {

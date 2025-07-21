@@ -8,7 +8,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
-import * as Joi from 'joi';
 import * as bcrypt from 'bcrypt';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
@@ -25,21 +24,7 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
-  private registerSchema = Joi.object({
-    name: Joi.string().required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).required(),
-    phone: Joi.string().required(),
-    role: Joi.string().valid('USER', 'ADMIN').required(),
-  });
-
   async register(registerDto: RegisterDto) {
-    // Validate input
-    const { error } = this.registerSchema.validate(registerDto);
-    if (error) {
-      throw new BadRequestException(error.details[0].message);
-    }
-
     // Check if user exists
     const existing = await this.prisma.user.findUnique({
       where: { email: registerDto.email },
@@ -70,18 +55,7 @@ export class AuthService {
     return result;
   }
 
-  private loginSchema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).required(),
-  });
-
   async login(loginDto: LoginDto) {
-    // Validate input
-    const { error } = this.loginSchema.validate(loginDto);
-    if (error) {
-      throw new BadRequestException(error.details[0].message);
-    }
-
     // Find user
     const user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
@@ -100,7 +74,9 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
     const token = await this.jwtService.signAsync(payload);
 
-    return { access_token: token };
+    // Omit password from user object
+    const { password, ...userInfo } = user;
+    return { token, user: userInfo };
   }
 
   async requestPasswordReset({ email }: RequestPasswordResetDto) {

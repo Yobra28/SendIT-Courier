@@ -30,10 +30,18 @@ export class UsersService {
       ];
     }
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({ where, skip, take: limit }),
+      this.prisma.user.findMany({ where, skip, take: limit, include: { parcelsSent: true } }),
       this.prisma.user.count({ where }),
     ]);
-    const data = users.map(({ password, ...rest }) => rest);
+    const data = users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      totalPackages: user.parcelsSent.length,
+      status: user.deletedAt ? 'Inactive' : 'Active',
+      joinDate: user.createdAt,
+    }));
     return {
       data,
       meta: {
@@ -46,10 +54,17 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
+    const user = await this.prisma.user.findUnique({ where: { id }, include: { parcelsSent: true } });
     if (!user || user.deletedAt) return null;
-    const { password, ...rest } = user;
-    return rest;
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      totalPackages: user.parcelsSent.length,
+      status: user.deletedAt ? 'Inactive' : 'Active',
+      joinDate: user.createdAt,
+    };
   }
 
   async update(id: string, updateUserDto: any) {

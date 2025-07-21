@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { ModalComponent } from '../../../shared/components/modal.component';
 import { NavbarComponent } from './navbar.component';
 import { FormsModule } from '@angular/forms';
+import { ParcelService } from '../../../shared/services/parcel.service';
 
 interface RecentParcel {
   id: string;
@@ -238,58 +239,9 @@ interface RecentParcel {
   `]
 })
 export class DashboardComponent implements OnInit {
-  // Remove or comment out the old recentParcels array
-  // recentParcels: RecentParcel[] = [ ... ];
-
   activeParcelTab: 'sent' | 'received' = 'sent';
-  sentParcels: RecentParcel[] = [
-    {
-      id: '1',
-      recipient: 'Alice Johnson',
-      destination: 'Abuja',
-      status: 'Delivered',
-      createdAt: new Date('2024-07-10T10:00:00'),
-      trackingNumber: 'SENT123456',
-      weight: 2.5,
-      price: 1500,
-      estimatedDelivery: new Date('2024-07-12T10:00:00'),
-    },
-    {
-      id: '2',
-      recipient: 'Bob Smith',
-      destination: 'Lagos',
-      status: 'In Transit',
-      createdAt: new Date('2024-07-12T14:30:00'),
-      trackingNumber: 'SENT654321',
-      weight: 1.2,
-      price: 900,
-      estimatedDelivery: new Date('2024-07-15T10:00:00'),
-    },
-  ];
-  receivedParcels: RecentParcel[] = [
-    {
-      id: '3',
-      recipient: 'You',
-      destination: 'Port Harcourt',
-      status: 'Delivered',
-      createdAt: new Date('2024-07-09T09:00:00'),
-      trackingNumber: 'RECV789012',
-      weight: 3.0,
-      price: 2000,
-      estimatedDelivery: new Date('2024-07-11T10:00:00'),
-    },
-    {
-      id: '4',
-      recipient: 'You',
-      destination: 'Enugu',
-      status: 'Pending',
-      createdAt: new Date('2024-07-13T16:00:00'),
-      trackingNumber: 'RECV210987',
-      weight: 0.8,
-      price: 600,
-      estimatedDelivery: new Date('2024-07-16T10:00:00'),
-    },
-  ];
+  sentParcels: RecentParcel[] = [];
+  receivedParcels: RecentParcel[] = [];
 
   modalOpen = false;
   selectedParcel: RecentParcel | null = null;
@@ -313,9 +265,27 @@ export class DashboardComponent implements OnInit {
   };
   supportFormSubmitted = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private parcelService: ParcelService) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Fetch sent parcels
+    this.parcelService.getParcels().subscribe((res: any) => {
+      // Adjust this logic if your backend distinguishes sent/received parcels by user
+      this.sentParcels = (res.data || res).map((p: any) => ({
+        id: p.id,
+        recipient: p.recipient,
+        destination: p.destination,
+        status: p.status,
+        createdAt: new Date(p.createdAt),
+        trackingNumber: p.trackingNumber,
+        weight: p.weight,
+        price: p.pricing,
+        estimatedDelivery: new Date(p.createdAt), // Replace with real value if available
+      }));
+    });
+    // If you have a separate endpoint for received parcels, call it here
+    // this.parcelService.getReceivedParcels().subscribe(...)
+  }
 
   trackParcel(trackingNumber: string): void {
     // Navigate to track page with pre-filled tracking number

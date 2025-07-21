@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../../shared/services/auth.service';
 
 interface MockUser {
   email: string;
@@ -289,33 +290,6 @@ interface MockUser {
 })
 export class LoginComponent {
   @Input() inModal = false;
-  // Mock user database
-  private mockUsers: MockUser[] = [
-    {
-      email: 'user@sendit.com',
-      password: 'user123',
-      role: 'user',
-      name: 'John Doe'
-    },
-    {
-      email: 'admin@sendit.com',
-      password: 'admin123',
-      role: 'admin',
-      name: 'Admin User'
-    },
-    {
-      email: 'sarah@example.com',
-      password: 'user123',
-      role: 'user',
-      name: 'Sarah Johnson'
-    },
-    {
-      email: 'mike@example.com',
-      password: 'user123',
-      role: 'user',
-      name: 'Mike Chen'
-    }
-  ];
 
   loginData = {
     email: '',
@@ -326,7 +300,7 @@ export class LoginComponent {
   isLoading = false;
   loginError = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   fillCredentials(type: 'user' | 'admin'): void {
     if (type === 'user') {
@@ -340,37 +314,41 @@ export class LoginComponent {
   }
 
   onLogin(form: any) {
+    console.log('Submitting login form', form);
     if (form.valid) {
       this.isLoading = true;
       this.loginError = '';
-      
-      // Simulate API call
-      setTimeout(() => {
-        this.isLoading = false;
-        
-        // Find user in mock database
-        const user = this.mockUsers.find(u => 
-          u.email === this.loginData.email && u.password === this.loginData.password
-        );
-        
-        if (user) {
-          // Store user info in localStorage (in real app, use proper auth service)
-          localStorage.setItem('currentUser', JSON.stringify({
-            email: user.email,
-            name: user.name,
-            role: user.role
-          }));
-          
-          // Navigate based on user role
-          if (user.role === 'admin') {
+      console.log('Login attempt:', this.loginData);
+      this.authService.login({
+        email: this.loginData.email,
+        password: this.loginData.password
+      }).subscribe({
+        next: (res) => {
+          console.log('Login observable next');
+          this.isLoading = false;
+          console.log('Login success:', res);
+          // Store token/user info as needed
+          localStorage.setItem('token', res.token);
+          localStorage.setItem('currentUser', JSON.stringify(res.user));
+          // Navigate based on real backend user role
+          if (res.user.role === 'ADMIN') {
             this.router.navigate(['/admin/dashboard']);
           } else {
             this.router.navigate(['/user/dashboard']);
           }
-        } else {
-          this.loginError = 'Invalid email or password. Please try again.';
+        },
+        error: (err) => {
+          console.log('Login observable error');
+          this.isLoading = false;
+          console.error('Login error:', err);
+          this.loginError = err.error?.message || 'Login failed. Please try again.';
+        },
+        complete: () => {
+          console.log('Login observable complete');
         }
-      }, 1500);
+      });
+    } else {
+      console.log('Login form is invalid', form);
     }
   }
 }

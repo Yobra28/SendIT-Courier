@@ -48,10 +48,11 @@ model Parcel {
   receiverId     String
   sender         User        @relation("SentParcels", fields: [senderId], references: [id])
   receiver       User        @relation("ReceivedParcels", fields: [receiverId], references: [id])
-  weight         Float
   status         ParcelStatus @default(PENDING)
   pickupLocation String
   destination    String
+  pricing        Float
+  trackingNumber String      @unique
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   deletedAt      DateTime?   // Soft delete
