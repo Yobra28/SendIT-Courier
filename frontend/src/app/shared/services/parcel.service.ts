@@ -12,8 +12,20 @@ export class ParcelService {
     return this.http.get(this.baseUrl);
   }
 
+  getSentParcels() {
+    return this.http.get(`${this.baseUrl}/sent`, { withCredentials: true });
+  }
+
+  getReceivedParcels() {
+    return this.http.get(`${this.baseUrl}/received`, { withCredentials: true });
+  }
+
   getParcel(id: string) {
     return this.http.get(`${this.baseUrl}/${id}`);
+  }
+
+  getParcelByTrackingNumber(trackingNumber: string) {
+    return this.http.get(`${this.baseUrl}/track/${trackingNumber}`);
   }
 
   createParcel(parcel: any) {
@@ -26,5 +38,23 @@ export class ParcelService {
 
   deleteParcel(id: string) {
     return this.http.delete(`${this.baseUrl}/${id}`);
+  }
+
+  addTrackingStep(parcelId: string, stepData: any) {
+    return this.http.post(`${this.baseUrl}/${parcelId}/steps`, stepData, { withCredentials: true });
+  }
+
+  geocodeAddress(address: string) {
+    // Nominatim API (no key required, but rate-limited)
+    return this.http.get<any>(
+      `https://nominatim.openstreetmap.org/search`,
+      {
+        params: {
+          q: address,
+          format: 'json',
+          limit: '1'
+        }
+      }
+    );
   }
 } 

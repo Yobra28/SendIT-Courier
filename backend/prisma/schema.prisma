@@ -56,4 +56,16 @@ model Parcel {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   deletedAt      DateTime?   // Soft delete
+  trackingSteps  ParcelTrackingStep[]
+}
+
+model ParcelTrackingStep {
+  id        String   @id @default(uuid())
+  parcel    Parcel   @relation(fields: [parcelId], references: [id])
+  parcelId  String
+  status    String
+  location  String
+  lat       Float
+  lng       Float
+  timestamp DateTime @default(now())
 }

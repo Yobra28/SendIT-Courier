@@ -358,7 +358,6 @@ interface AdminUser {
                 <div class="form-group"><label>Recipient</label><div>{{ selectedOrder.recipient }}</div></div>
                 <div class="form-group"><label>Origin</label><div>{{ selectedOrder.origin }}</div></div>
                 <div class="form-group"><label>Destination</label><div>{{ selectedOrder.destination }}</div></div>
-                <div class="form-group"><label>Weight</label><div>{{ selectedOrder.weight }}kg</div></div>
                 <div class="form-group"><label>Date</label><div>{{ selectedOrder.createdAt | date:'short' }}</div></div>
               </div>
               <div class="form-actions">
@@ -423,7 +422,6 @@ interface AdminUser {
                 <div class="table-cell">Sender</div>
                 <div class="table-cell">Recipient</div>
                 <div class="table-cell">Route</div>
-                <div class="table-cell">Weight</div>
                 <div class="table-cell">Status</div>
                 <div class="table-cell">Pricing</div>
                 <div class="table-cell">Actions</div>
@@ -441,7 +439,6 @@ interface AdminUser {
                     <span class="destination">{{ order.destination }}</span>
                   </div>
                 </div>
-                <div class="table-cell">{{ order.weight }}kg</div>
                 <div class="table-cell">
                   <span class="status-badge" [ngClass]="'status-' + order.status.toLowerCase().replace(' ', '-')">
                     {{ order.status }}
@@ -916,7 +913,7 @@ interface AdminUser {
 
     .table-header {
       display: grid;
-      grid-template-columns: 150px 150px 150px 200px 80px 120px 120px;
+      grid-template-columns: 150px 150px 150px 200px 120px 120px 120px;
       gap: 1rem;
       padding: 1rem 1.5rem;
       background: var(--gray-100);
@@ -927,7 +924,7 @@ interface AdminUser {
 
     .table-row {
       display: grid;
-      grid-template-columns: 150px 150px 150px 200px 80px 120px 120px;
+      grid-template-columns: 150px 150px 150px 200px 120px 120px 120px;
       gap: 1rem;
       padding: 1rem 1.5rem;
       border-bottom: 1px solid var(--gray-200);
@@ -1114,7 +1111,7 @@ interface AdminUser {
 
       .table-header,
       .table-row {
-        grid-template-columns: 120px 120px 120px 160px 60px 100px 100px;
+        grid-template-columns: 120px 120px 120px 160px 100px 100px 100px;
       }
     }
 
@@ -1249,11 +1246,11 @@ export class AdminDashboardComponent implements OnInit {
     private adminService: AdminService
   ) {
     this.parcelForm = this.fb.group({
-      sender: ['', Validators.required], // user ID
-      recipient: ['', Validators.required], // user ID
-      origin: ['', Validators.required],
+      // sender: ['', Validators.required], // Remove sender from payload
+      recipient: ['', Validators.required], // user ID (from email lookup)
+      origin: ['', Validators.required], // pickupLocation
       destination: ['', Validators.required],
-      category: ['', Validators.required],
+      category: [''], // keep for UI, not sent to backend
       pricing: [500, Validators.required],
     });
     this.editForm = this.fb.group({
@@ -1293,7 +1290,15 @@ export class AdminDashboardComponent implements OnInit {
   createParcel(): void {
     if (this.parcelForm.valid) {
       this.isCreating = true;
-      this.adminService.createParcel(this.parcelForm.value).subscribe({
+      // Build the DTO for backend
+      const formValue = this.parcelForm.value;
+      const payload: any = {
+        receiverId: formValue.recipient, // recipient field holds the user ID
+        pickupLocation: formValue.origin,
+        destination: formValue.destination,
+        pricing: parseInt(formValue.pricing, 10)
+      };
+      this.adminService.createParcel(payload).subscribe({
         next: (newOrder) => {
           this.isCreating = false;
           this.showCreateForm = false;

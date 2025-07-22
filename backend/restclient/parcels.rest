@@ -30,3 +30,13 @@ Authorization: Bearer {{adminToken}}
 ### Soft delete parcel
 DELETE http://localhost:3000/parcels/{{parcelId}}
 Authorization: Bearer {{token}} 
+
+### Update parcel addresses (admin only)
+PATCH http://localhost:3000/parcels/{{parcelId}}/addresses
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "pickupLocation": "Mombasa",
+  "destination": "Nairobi"
+} 

@@ -13,7 +13,6 @@ interface RecentParcel {
   status: string;
   createdAt: Date;
   trackingNumber: string;
-  weight: number;
   price: number;
   estimatedDelivery: Date;
 }
@@ -243,6 +242,11 @@ export class DashboardComponent implements OnInit {
   sentParcels: RecentParcel[] = [];
   receivedParcels: RecentParcel[] = [];
 
+  loadingSent = false;
+  loadingReceived = false;
+  errorSent: string | null = null;
+  errorReceived: string | null = null;
+
   modalOpen = false;
   selectedParcel: RecentParcel | null = null;
 
@@ -268,23 +272,50 @@ export class DashboardComponent implements OnInit {
   constructor(private router: Router, private parcelService: ParcelService) {}
 
   ngOnInit(): void {
-    // Fetch sent parcels
-    this.parcelService.getParcels().subscribe((res: any) => {
-      // Adjust this logic if your backend distinguishes sent/received parcels by user
-      this.sentParcels = (res.data || res).map((p: any) => ({
-        id: p.id,
-        recipient: p.recipient,
-        destination: p.destination,
-        status: p.status,
-        createdAt: new Date(p.createdAt),
-        trackingNumber: p.trackingNumber,
-        weight: p.weight,
-        price: p.pricing,
-        estimatedDelivery: new Date(p.createdAt), // Replace with real value if available
-      }));
+    this.loadingSent = true;
+    this.loadingReceived = true;
+    this.errorSent = null;
+    this.errorReceived = null;
+
+    this.parcelService.getSentParcels().subscribe({
+      next: (res: any) => {
+        this.sentParcels = (res.data || res).map((p: any) => ({
+          id: p.id,
+          recipient: p.recipient,
+          destination: p.destination,
+          status: p.status,
+          createdAt: new Date(p.createdAt),
+          trackingNumber: p.trackingNumber,
+          price: p.pricing,
+          estimatedDelivery: new Date(p.createdAt),
+        }));
+        this.loadingSent = false;
+      },
+      error: (err) => {
+        this.errorSent = 'Failed to load sent parcels.';
+        this.loadingSent = false;
+      }
     });
-    // If you have a separate endpoint for received parcels, call it here
-    // this.parcelService.getReceivedParcels().subscribe(...)
+
+    this.parcelService.getReceivedParcels().subscribe({
+      next: (res: any) => {
+        this.receivedParcels = (res.data || res).map((p: any) => ({
+          id: p.id,
+          recipient: p.recipient,
+          destination: p.destination,
+          status: p.status,
+          createdAt: new Date(p.createdAt),
+          trackingNumber: p.trackingNumber,
+          price: p.pricing,
+          estimatedDelivery: new Date(p.createdAt),
+        }));
+        this.loadingReceived = false;
+      },
+      error: (err) => {
+        this.errorReceived = 'Failed to load received parcels.';
+        this.loadingReceived = false;
+      }
+    });
   }
 
   trackParcel(trackingNumber: string): void {

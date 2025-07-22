@@ -78,7 +78,7 @@ export class ParcelsService {
     const page = Number(options.page) > 0 ? Number(options.page) : 1;
     const limit = Number(options.limit) > 0 ? Number(options.limit) : 10;
     const skip = (page - 1) * limit;
-    const where: any = { receiverId: userId, deletedAt: null };
+    const where: any = { receiverId: userId, status: 'DELIVERED', deletedAt: null };
     if (options.search) {
       where.OR = [
         { pickupLocation: { contains: options.search, mode: 'insensitive' } },
@@ -123,6 +123,51 @@ export class ParcelsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
+  }
+
+  async updateAddresses(id: string, pickupLocation: string, destination: string) {
+    const parcel = await this.prisma.parcel.update({
+      where: { id },
+      data: { pickupLocation, destination },
+      include: { sender: true, receiver: true },
+    });
+    return this.toParcelOrder(parcel);
+  }
+
+  async getParcelByTrackingNumber(trackingNumber: string) {
+    const parcel = await this.prisma.parcel.findUnique({
+      where: { trackingNumber },
+      include: { sender: true, receiver: true, trackingSteps: { orderBy: { timestamp: 'asc' } } },
+    });
+    if (!parcel) return { message: 'Parcel not found' };
+    return {
+      ...this.toParcelOrder(parcel),
+      origin: parcel.pickupLocation, // Ensure always present
+      destination: parcel.destination, // Ensure always present
+      steps: parcel.trackingSteps.map((step: any) => ({
+        status: step.status,
+        description: `Status: ${step.status}`,
+        location: step.location,
+        lat: step.lat,
+        lng: step.lng,
+        timestamp: step.timestamp,
+        completed: step.status === 'DELIVERED',
+      })),
+    };
+  }
+
+  async addTrackingStep(parcelId: string, dto: any) {
+    const step = await this.prisma.parcelTrackingStep.create({
+      data: {
+        parcelId,
+        status: dto.status,
+        location: dto.location,
+        lat: dto.lat,
+        lng: dto.lng,
+        timestamp: dto.timestamp || new Date(),
+      },
+    });
+    return step;
   }
 
   // Helper to map DB parcel to ParcelOrder shape

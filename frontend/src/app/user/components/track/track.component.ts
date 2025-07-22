@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { ParcelService } from '../../../shared/services/parcel.service';
 
 interface TrackingStep {
   status: string;
@@ -86,6 +87,8 @@ interface TrackingStep {
           <div class="tracking-map">
             <div id="liveMap" style="width:100%;height:320px;border-radius:8px;"></div>
           </div>
+
+          <!-- Remove isAdmin, newStep, isAddingStep, addTrackingStep -->
         </div>
 
         <div class="no-result" *ngIf="showNoResult">
@@ -374,8 +377,13 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
   private leafletPolyline: L.Polyline | null = null;
   private leafletMarkers: L.Marker[] = [];
   private mapInitialized = false;
+  // Remove isAdmin, newStep, isAddingStep, addTrackingStep
 
-  constructor(private sanitizer: DomSanitizer, private router: Router) {
+  constructor(
+    private sanitizer: DomSanitizer,
+    private router: Router,
+    private parcelService: ParcelService
+  ) {
     // Check if tracking number was passed via URL parameter
     const urlParams = new URLSearchParams(window.location.search);
     const trackingParam = urlParams.get('tracking');
@@ -405,122 +413,74 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
     this.showNoResult = false;
     this.trackingResult = null;
 
-    // Simulate API call
-    setTimeout(() => {
-      this.isLoading = false;
-      const tn = this.trackingNumber.trim().toUpperCase();
-      if (tn === 'SENT123456') {
-        this.trackingResult = {
-          recipient: 'John Doe',
-          destination: 'Lagos, NG',
-          trackingNumber: this.trackingNumber,
-          status: 'Delivered',
-          steps: [
-            { status: 'Package Received', description: 'Package received at facility', location: 'Abuja, NG', timestamp: new Date('2025-01-10T08:00:00'), completed: true },
-            { status: 'Processing', description: 'Processing for shipment', location: 'Abuja, NG', timestamp: new Date('2025-01-10T10:00:00'), completed: true },
-            { status: 'In Transit', description: 'On the way to Lagos', location: 'Onitsha, NG', timestamp: new Date('2025-01-11T09:00:00'), completed: true },
-            { status: 'Delivered', description: 'Package delivered', location: 'Lagos, NG', timestamp: new Date('2025-01-12T15:00:00'), completed: true }
-          ]
-        };
-      } else if (tn === 'SENT654321') {
-        this.trackingResult = {
-          recipient: 'Mike Smith',
-          destination: 'Chicago, IL',
-          trackingNumber: this.trackingNumber,
-          status: 'Pending',
-          steps: [
-            { status: 'Package Received', description: 'Package received at facility', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T08:00:00'), completed: true },
-            { status: 'Processing', description: 'Processing for shipment', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T10:30:00'), completed: true },
-            { status: 'Pending', description: 'Awaiting pickup by courier', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T12:00:00'), completed: false }
-          ]
-        };
-      } else if (tn === 'RECV789012') {
-        this.trackingResult = {
-          recipient: 'Sarah Johnson',
-          destination: 'Abuja, NG',
-          trackingNumber: this.trackingNumber,
-          status: 'In Transit',
-          steps: [
-            { status: 'Package Received', description: 'Package received at facility', location: 'Port Harcourt, NG', timestamp: new Date('2025-01-13T08:00:00'), completed: true },
-            { status: 'Processing', description: 'Processing for shipment', location: 'Port Harcourt, NG', timestamp: new Date('2025-01-13T10:00:00'), completed: true },
-            { status: 'In Transit', description: 'On the way to Abuja', location: 'Lokoja, NG', timestamp: new Date('2025-01-14T09:00:00'), completed: true },
-            { status: 'In Transit', description: 'Approaching Abuja', location: 'Abuja, NG', timestamp: new Date('2025-01-15T12:00:00'), completed: false }
-          ]
-        };
-      } else if (tn === 'RECV210987') {
-        this.trackingResult = {
-          recipient: 'Emily Davis',
-          destination: 'Ibadan, NG',
-          trackingNumber: this.trackingNumber,
-          status: 'Processing',
-          steps: [
-            { status: 'Package Received', description: 'Package received at facility', location: 'Kano, NG', timestamp: new Date('2025-01-12T08:00:00'), completed: true },
-            { status: 'Processing', description: 'Processing for shipment', location: 'Kano, NG', timestamp: new Date('2025-01-12T10:00:00'), completed: false }
-          ]
-        };
-      } else if (tn === 'ST123456789') {
-        this.trackingResult = {
-          recipient: 'Sarah Johnson',
-          destination: 'New York, NY',
-          trackingNumber: this.trackingNumber,
-          status: 'In Transit',
-          steps: [
-            { status: 'Package Received', description: 'Your package has been received at our facility', location: 'San Francisco, CA', timestamp: new Date('2025-01-15T08:00:00'), completed: true },
-            { status: 'Processing', description: 'Package is being processed and prepared for shipment', location: 'San Francisco, CA', timestamp: new Date('2025-01-15T10:30:00'), completed: true },
-            { status: 'In Transit', description: 'Package is on its way to destination', location: 'Denver, CO', timestamp: new Date('2025-01-16T14:20:00'), completed: true },
-            { status: 'Out for Delivery', description: 'Package is out for delivery', location: 'New York, NY', timestamp: new Date('2025-01-17T09:00:00'), completed: false },
-            { status: 'Delivered', description: 'Package has been delivered', location: 'New York, NY', timestamp: new Date('2025-01-17T15:00:00'), completed: false }
-          ]
-        };
-      } else if (tn === 'ST123456790') {
-        this.trackingResult = {
-          recipient: 'Emily Davis',
-          destination: 'Chicago, IL',
-          trackingNumber: this.trackingNumber,
-          status: 'Delivered',
-          steps: [
-            { status: 'Package Received', description: 'Package received at facility', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T08:00:00'), completed: true },
-            { status: 'Processing', description: 'Processing for shipment', location: 'Los Angeles, CA', timestamp: new Date('2025-01-14T10:30:00'), completed: true },
-            { status: 'In Transit', description: 'On the way to Chicago', location: 'St. Louis, MO', timestamp: new Date('2025-01-15T09:00:00'), completed: true },
-            { status: 'Delivered', description: 'Package delivered', location: 'Chicago, IL', timestamp: new Date('2025-01-16T15:00:00'), completed: true }
-          ]
-        };
-      } else if (tn === 'ST123456791') {
-        this.trackingResult = {
-          recipient: 'David Wilson',
-          destination: 'Miami, FL',
-          trackingNumber: this.trackingNumber,
-          status: 'Delivered',
-          steps: [
-            { status: 'Package Received', description: 'Package received at facility', location: 'Seattle, WA', timestamp: new Date('2025-01-13T08:00:00'), completed: true },
-            { status: 'Processing', description: 'Processing for shipment', location: 'Seattle, WA', timestamp: new Date('2025-01-13T10:00:00'), completed: true },
-            { status: 'In Transit', description: 'On the way to Miami', location: 'Atlanta, GA', timestamp: new Date('2025-01-14T09:00:00'), completed: true },
-            { status: 'Delivered', description: 'Package delivered', location: 'Miami, FL', timestamp: new Date('2025-01-15T15:00:00'), completed: true }
-          ]
-        };
-      } else {
+    this.parcelService.getParcelByTrackingNumber(this.trackingNumber.trim()).subscribe({
+      next: (res: any) => {
+        if (res && !res.message) {
+          // Use real steps from backend if available, fallback to single step
+          const steps = Array.isArray(res.steps) && res.steps.length > 0 ? res.steps.map((step: any) => ({
+            status: step.status,
+            description: step.description,
+            location: step.location,
+            timestamp: new Date(step.timestamp),
+            completed: step.completed,
+            lat: step.lat,
+            lng: step.lng
+          })) : [
+            {
+              status: res.status,
+              description: `Current status: ${res.status}`,
+              location: res.destination,
+              timestamp: new Date(res.createdAt),
+              completed: res.status === 'DELIVERED',
+              lat: null,
+              lng: null
+            },
+          ];
+          this.trackingResult = {
+            recipient: res.recipient,
+            destination: res.destination,
+            trackingNumber: res.trackingNumber,
+            status: res.status,
+            steps,
+          };
+          this.isLoading = false;
+          this.renderLeafletMap();
+        } else {
+          this.isLoading = false;
+          this.showNoResult = true;
+        }
+      },
+      error: () => {
+        this.isLoading = false;
         this.showNoResult = true;
       }
-      this.renderLeafletMap();
-    }, 1500);
+    });
   }
 
   goToDashboard() {
     this.router.navigate(['/user/dashboard']);
   }
 
-  getStepCoordinates(): [number, number][] {
-    // Mock: return coordinates for each step (San Francisco, Denver, New York)
-    return [
-      [37.7749, -122.4194], // San Francisco
-      [39.7392, -104.9903], // Denver
-      [40.7128, -74.0060]  // New York
-    ];
-  }
-
-  renderLeafletMap() {
-    setTimeout(() => {
-      const coords = this.getStepCoordinates();
+  // Update renderLeafletMap to show only the route between sender and receiver
+  async renderLeafletMap() {
+    setTimeout(async () => {
+      let coords: [number, number][] = [];
+      if (this.trackingResult && this.trackingResult.origin && this.trackingResult.destination) {
+        try {
+          const [originRes, destRes] = await Promise.all([
+            this.parcelService.geocodeAddress(this.trackingResult.origin).toPromise(),
+            this.parcelService.geocodeAddress(this.trackingResult.destination).toPromise()
+          ]);
+          if (originRes && originRes.length && destRes && destRes.length) {
+            const originCoords: [number, number] = [parseFloat(originRes[0].lat), parseFloat(originRes[0].lon)];
+            const destCoords: [number, number] = [parseFloat(destRes[0].lat), parseFloat(destRes[0].lon)];
+            coords = [originCoords, destCoords];
+          }
+        } catch (e) {
+          // Geocoding failed
+          coords = [];
+        }
+      }
       if (!document.getElementById('liveMap')) return;
       if (!coords.length) return;
       if (this.leafletMap) {
@@ -528,8 +488,8 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
         this.leafletMap = null;
       }
       this.leafletMap = L.map('liveMap', {
-        center: coords[coords.length - 1],
-        zoom: 5,
+        center: coords[0],
+        zoom: 6,
         zoomControl: false,
         attributionControl: false,
       });
@@ -538,10 +498,9 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
       }).addTo(this.leafletMap);
       // Draw polyline
       this.leafletPolyline = L.polyline(coords, { color: '#2563eb', weight: 4 }).addTo(this.leafletMap);
-      // Add markers
-      this.leafletMarkers = coords.map((coord, idx) =>
-        L.marker(coord, { title: `Step ${idx + 1}` }).addTo(this.leafletMap!)
-      );
+      // Add markers for sender and receiver
+      L.marker(coords[0], { title: 'Sender' }).addTo(this.leafletMap!);
+      L.marker(coords[1], { title: 'Receiver' }).addTo(this.leafletMap!);
       this.leafletMap.fitBounds(this.leafletPolyline.getBounds(), { padding: [30, 30] });
     }, 0);
   }

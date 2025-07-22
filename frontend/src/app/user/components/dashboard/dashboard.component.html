@@ -29,6 +29,11 @@
           </div>
           <div class="parcels-list">
             <div *ngIf="activeParcelTab === 'sent'">
+              <div *ngIf="loadingSent" style="text-align:center; color:#2563eb; margin:2rem 0;">
+                <span class="material-icons" style="vertical-align:middle; font-size:2rem;">autorenew</span> Loading sent parcels...
+              </div>
+              <div *ngIf="errorSent" style="color:#dc2626; text-align:center; margin:2rem 0;">{{ errorSent }}</div>
+              <div *ngIf="!loadingSent && !errorSent && sentParcels.length === 0" style="text-align:center; color:#888; margin:2rem 0;">No sent parcels found.</div>
               <div *ngFor="let parcel of sentParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer;">
                 <div class="parcel-info">
                   <div class="parcel-details">
@@ -60,6 +65,11 @@
               </div>
             </div>
             <div *ngIf="activeParcelTab === 'received'">
+              <div *ngIf="loadingReceived" style="text-align:center; color:#2563eb; margin:2rem 0;">
+                <span class="material-icons" style="vertical-align:middle; font-size:2rem;">autorenew</span> Loading received parcels...
+              </div>
+              <div *ngIf="errorReceived" style="color:#dc2626; text-align:center; margin:2rem 0;">{{ errorReceived }}</div>
+              <div *ngIf="!loadingReceived && !errorReceived && receivedParcels.length === 0" style="text-align:center; color:#888; margin:2rem 0;">No received parcels found.</div>
               <div *ngFor="let parcel of receivedParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer;">
                 <div class="parcel-info">
                   <div class="parcel-details">
@@ -95,7 +105,6 @@
             <ng-container *ngIf="selectedParcel">
               <h2>{{ selectedParcel.recipient }}</h2>
               <p><strong>Destination:</strong> {{ selectedParcel.destination }}</p>
-              <p><strong>Weight:</strong> {{ selectedParcel.weight }}kg</p>
               <p><strong>Price:</strong> ${{ selectedParcel.price }}</p>
               <p><strong>Status:</strong> {{ selectedParcel.status }}</p>
               <p><strong>Tracking Number:</strong> {{ selectedParcel.trackingNumber }}</p>
