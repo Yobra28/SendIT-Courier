@@ -6,6 +6,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto/create-user.dto';
+import { Role } from 'generated/prisma';
 
 interface FindAllOptions {
   page?: number;
@@ -38,6 +41,7 @@ export class UsersService {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      role: user.role, // Include role for filtering couriers
       totalPackages: user.parcelsSent.length,
       status: user.deletedAt ? 'Inactive' : 'Active',
       joinDate: user.createdAt,
@@ -54,34 +58,102 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id }, include: { parcelsSent: true } });
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        createdAt: true,
+        deletedAt: true,
+        notifyEmail: true,
+        notifySms: true,
+        notifyPush: true,
+        parcelsSent: true,
+      },
+    });
     if (!user || user.deletedAt) return null;
     return {
       id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
+      role: user.role,
       totalPackages: user.parcelsSent.length,
       status: user.deletedAt ? 'Inactive' : 'Active',
-      joinDate: user.createdAt,
+      createdAt: user.createdAt,
+      notifyEmail: user.notifyEmail,
+      notifySms: user.notifySms,
+      notifyPush: user.notifyPush,
     };
   }
 
-  async update(id: string, updateUserDto: any) {
-    const user = await this.prisma.user.update({
-      where: { id },
-      data: { ...updateUserDto },
+  async create(createUserDto: CreateUserDto) {
+    // Check if email already exists
+    const existing = await this.prisma.user.findUnique({ where: { email: createUserDto.email } });
+    if (existing) {
+      throw new Error('Email address already in use.');
+    }
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        name: createUserDto.name,
+        email: createUserDto.email,
+        phone: createUserDto.phone,
+        password: hashedPassword,
+        role: (createUserDto.role as Role) || Role.USER,
+      },
     });
     const { password, ...rest } = user;
     return rest;
   }
 
+  async update(id: string, updateUserDto: any) {
+    // Only allow updating fields that exist in the model
+    const allowedFields = ['name', 'email', 'phone', 'notifyEmail', 'notifySms', 'notifyPush'];
+    const data: any = {};
+    for (const key of allowedFields) {
+      if (updateUserDto[key] !== undefined) {
+        data[key] = updateUserDto[key];
+      }
+    }
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data,
+      });
+      const { password, ...rest } = user;
+      return rest;
+    } catch (e) {
+      console.error('Update error:', JSON.stringify(e, null, 2));
+      // Handle Prisma unique constraint error
+      if (e.code === 'P2002' && e.meta?.target?.includes('email')) {
+        throw new Error('Email address already in use.');
+      }
+      throw e;
+    }
+  }
+
   async softDelete(id: string) {
-    const user = await this.prisma.user.update({
+    // Hard delete: permanently remove the user
+    const user = await this.prisma.user.delete({
       where: { id },
-      data: { deletedAt: new Date() },
     });
     const { password, ...rest } = user;
     return rest;
+  }
+
+  async setTwoFactorSecret(id: string, secret: string) {
+    return this.prisma.user.update({ where: { id }, data: { twoFactorSecret: secret } });
+  }
+
+  async enableTwoFactor(id: string) {
+    return this.prisma.user.update({ where: { id }, data: { twoFactorEnabled: true } });
+  }
+
+  async findOneRaw(id: string) {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 }

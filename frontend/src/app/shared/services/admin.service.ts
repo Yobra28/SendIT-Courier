@@ -47,4 +47,16 @@ export class AdminService {
   deleteUser(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/users/${id}`, this.getAuthHeaders());
   }
+
+  createUser(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/users`, data, this.getAuthHeaders());
+  }
+
+  getProfile(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/users/me`, this.getAuthHeaders());
+  }
+
+  updateProfile(data: any): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/users/me`, data, this.getAuthHeaders());
+  }
 } 

@@ -10,6 +10,14 @@ export const authRoutes: Routes = [
     loadComponent: () => import('./components/register/register.component').then(m => m.RegisterComponent)
   },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('./components/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./components/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full'

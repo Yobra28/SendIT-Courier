@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ParcelService } from '../../../shared/services/parcel.service';
+import { UserService } from '../../../shared/services/user.service';
 
 interface Notification {
   type: 'delivered' | 'in_transit' | 'delayed' | 'created';
@@ -18,49 +20,24 @@ interface Notification {
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent {
-  constructor(private router: Router) {}
+export class NavbarComponent implements OnInit {
+  constructor(
+    private router: Router,
+    private elementRef: ElementRef,
+    private parcelService: ParcelService,
+    private userService: UserService
+  ) {}
 
   showNotifications = false;
   showSettingsModal = false;
   showProfileModal = false;
   settingsTab: 'profile' | 'notifications' | 'security' = 'profile';
-  notifications: Notification[] = [
-    {
-      type: 'delivered',
-      title: 'Package Delivered',
-      message: 'Your package PKG002 has been delivered successfully',
-      time: '2 hours ago',
-      unread: true
-    },
-    {
-      type: 'in_transit',
-      title: 'Package In Transit',
-      message: 'Package PKG001 is now in transit to Abuja',
-      time: '4 hours ago',
-      unread: true
-    },
-    {
-      type: 'delayed',
-      title: 'Delivery Delayed',
-      message: 'Package PKG003 delivery has been delayed due to weather',
-      time: '1 day ago',
-      unread: false
-    },
-    {
-      type: 'created',
-      title: 'New Package Created',
-      message: 'A new package has been created',
-      time: '',
-      unread: false
-    }
-  ];
+  notifications: any[] = [];
 
   profileForm = {
     fullName: 'John Doe',
     email: 'john.doe@email.com',
     phone: '+234 801 234 5678',
-    address: '123 Lagos Street, Victoria Island'
   };
 
   profileInfo = {
@@ -69,7 +46,6 @@ export class NavbarComponent {
     role: 'User',
     email: 'user@sendit.com',
     phone: '+234 801 234 5678',
-    location: 'Lagos, Nigeria',
     totalPackages: 23,
     memberSince: 'Jan 2024'
   };
@@ -80,12 +56,71 @@ export class NavbarComponent {
     push: true
   };
 
+  userDropdownOpen = false;
+  show2FAModal = false;
+  twoFAQr = '';
+  twoFABase32 = '';
+  twoFACode = '';
+  twoFAResult: 'success' | 'failure' | '' = '';
+
+  ngOnInit() {
+    this.fetchNotifications();
+    this.fetchUserProfile();
+  }
+
+  fetchNotifications() {
+    this.parcelService.getUserNotifications().subscribe((data: any) => {
+      this.notifications = data;
+    });
+  }
+
+  fetchUserProfile() {
+    this.userService.getProfile().subscribe((user: any) => {
+      this.profileForm = {
+        fullName: user.name,
+        email: user.email,
+        phone: user.phone
+      };
+      this.profileInfo = {
+        initials: user.name ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : '',
+        name: user.name,
+        role: user.role,
+        email: user.email,
+        phone: user.phone,
+        totalPackages: user.totalPackages || 0,
+        memberSince: user.createdAt ? (new Date(user.createdAt)).toLocaleString('default', { month: 'short', year: 'numeric' }) : '',
+      };
+      this.notificationPrefs = {
+        email: user.notifyEmail,
+        sms: user.notifySms,
+        push: user.notifyPush
+      };
+    });
+  }
+
+  toggleUserDropdown() {
+    this.userDropdownOpen = !this.userDropdownOpen;
+    if (this.userDropdownOpen) {
+      this.showNotifications = false;
+      this.showSettingsModal = false;
+      this.showProfileModal = false;
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!this.elementRef.nativeElement.contains(target) && this.userDropdownOpen) {
+      this.userDropdownOpen = false;
+    }
+  }
+
   get hasUnreadNotifications(): boolean {
-    return this.notifications.some(n => n.unread);
+    return this.notifications.some(n => !n.read);
   }
 
   get notificationUnreadCount(): number {
-    return this.notifications.filter(n => n.unread).length;
+    return this.notifications.filter(n => !n.read).length;
   }
 
   toggleNotifications() {
@@ -93,6 +128,7 @@ export class NavbarComponent {
     if (this.showNotifications) {
       this.showSettingsModal = false;
       this.showProfileModal = false;
+      this.fetchNotifications();
     }
   }
 
@@ -101,7 +137,10 @@ export class NavbarComponent {
   }
 
   markAllRead() {
-    this.notifications.forEach(n => n.unread = false);
+    // Optionally, implement mark as read API call here
+    this.notifications.forEach(n => n.read = true);
+    // Optionally, refresh notifications from backend
+    this.fetchNotifications();
   }
 
   openSettings() {
@@ -109,6 +148,7 @@ export class NavbarComponent {
     this.showNotifications = false;
     this.showProfileModal = false;
     this.settingsTab = 'profile';
+    this.fetchUserProfile();
   }
 
   closeSettings() {
@@ -120,8 +160,17 @@ export class NavbarComponent {
   }
 
   saveSettings() {
-    // Mock save logic for all tabs
-    this.closeSettings();
+    this.userService.updateProfile({
+      name: this.profileForm.fullName,
+      email: this.profileForm.email,
+      phone: this.profileForm.phone,
+      notifyEmail: this.notificationPrefs.email,
+      notifySms: this.notificationPrefs.sms,
+      notifyPush: this.notificationPrefs.push
+    }).subscribe(() => {
+      this.fetchUserProfile();
+      this.closeSettings();
+    });
   }
 
   changePassword() {
@@ -130,13 +179,36 @@ export class NavbarComponent {
   }
 
   enable2FA() {
-    // Mock enable 2FA action
-    alert('Enable Two-Factor Authentication clicked');
+    this.userService.setup2FA().subscribe((res: any) => {
+      this.twoFAQr = res.otpauthUrl;
+      this.twoFABase32 = res.base32;
+      this.twoFACode = '';
+      this.twoFAResult = '';
+      this.show2FAModal = true;
+    });
+  }
+
+  submit2FA() {
+    this.userService.verify2FA(this.twoFACode).subscribe((res: any) => {
+      if (res.verified) {
+        this.twoFAResult = 'success';
+        setTimeout(() => {
+          this.show2FAModal = false;
+          this.fetchUserProfile();
+        }, 1500);
+      } else {
+        this.twoFAResult = 'failure';
+      }
+    });
   }
 
   deleteAccount() {
-    // Mock delete account action
-    alert('Delete Account clicked');
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
+    this.userService.deleteMe().subscribe(() => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('currentUser');
+      this.router.navigate(['/']);
+    });
   }
 
   openProfile() {
@@ -149,8 +221,19 @@ export class NavbarComponent {
     this.showProfileModal = false;
   }
 
+  goToDashboard() {
+    this.router.navigate(['/user/dashboard']);
+    this.userDropdownOpen = false;
+  }
+
   logout() {
-    // Add any logout logic here (e.g., clearing tokens)
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
     this.router.navigate(['/']);
+    this.userDropdownOpen = false;
+  }
+
+  encodeURIComponentUri(uri: string): string {
+    return encodeURIComponent(uri);
   }
 } 

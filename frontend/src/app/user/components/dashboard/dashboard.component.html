@@ -148,9 +148,15 @@
       <span class="material-icons" style="font-size: 2.2rem;">person</span>
     </div>
     <div style="color: #fff;">
-      <div style="font-weight: 700; font-size: 1.18rem; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;">John Doe</div>
-      <div style="font-size: 0.98rem; opacity: 0.92;">user&#64;sendit.com</div>
-      <div style="font-size: 0.98rem; opacity: 0.92;">+234 801 234 5678</div>
+      <div style="font-weight: 700; font-size: 1.18rem; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;">
+        {{ userProfile?.name || 'User' }}
+      </div>
+      <div style="font-size: 0.98rem; opacity: 0.92;">
+        {{ userProfile?.email || 'user@email.com' }}
+      </div>
+      <div style="font-size: 0.98rem; opacity: 0.92;">
+        {{ userProfile?.phone || '+234 801 234 5678' }}
+      </div>
     </div>
   </div>
   <div *ngIf="userHistory.length; else noHistory">

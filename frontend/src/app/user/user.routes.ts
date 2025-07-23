@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { CourierDashboardComponent } from './components/dashboard/courier-dashboard.component';
 
 export const userRoutes: Routes = [
   {
@@ -13,6 +14,7 @@ export const userRoutes: Routes = [
     path: 'track',
     loadComponent: () => import('./components/track/track.component').then(m => m.TrackComponent)
   },
+  { path: 'courier/dashboard', component: CourierDashboardComponent },
   {
     path: '',
     redirectTo: 'dashboard',

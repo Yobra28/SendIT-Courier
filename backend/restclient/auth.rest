@@ -18,3 +18,13 @@ Content-Type: application/json
   "email": "itsbrian2025@gmail.com",
   "password": "password123"
 } 
+
+###
+POST http://localhost:3000/api/contact
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "email": "briankuruui3768@gmail.com",
+  "message": "Hello"
+}

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -41,8 +43,29 @@ export class ParcelsService {
         status: 'PENDING',
         trackingNumber,
         pricing,
+        ...(createParcelDto.courierId ? { courierId: createParcelDto.courierId } : {}),
+        ...(createParcelDto.estimatedDelivery ? { estimatedDelivery: createParcelDto.estimatedDelivery } : {}),
       },
       include: { sender: true, receiver: true },
+    });
+    // Send email to receiver
+    await this.emailService.sendParcelCreatedReceiver(parcel.receiver.email, {
+      name: parcel.receiver.name,
+      trackingNumber: parcel.trackingNumber,
+      status: parcel.status,
+      estimatedDelivery: parcel.estimatedDelivery ? new Date(parcel.estimatedDelivery).toLocaleString() : '',
+      price: parcel.pricing,
+      destination: parcel.destination,
+      year: new Date().getFullYear(),
+    });
+    // Send email to sender
+    await this.emailService.sendParcelCreatedSender(parcel.sender.email, {
+      name: parcel.sender.name,
+      recipient: parcel.receiver.name,
+      destination: parcel.destination,
+      trackingNumber: parcel.trackingNumber,
+      estimatedDelivery: parcel.estimatedDelivery ? new Date(parcel.estimatedDelivery).toLocaleString() : '',
+      year: new Date().getFullYear(),
     });
     return this.toParcelOrder(parcel);
   }
@@ -110,11 +133,73 @@ export class ParcelsService {
   }
 
   async updateStatus(id: string, status: string) {
+    // Map human-readable status to enum
+    const statusMap: Record<string, string> = {
+      'Pending': 'PENDING',
+      'In Transit': 'IN_TRANSIT',
+      'Out for Pickup': 'OUT_FOR_PICKUP',
+      'Delivered': 'DELIVERED',
+    };
+    const enumStatus = statusMap[status] || status; // fallback if already enum
     const parcel = await this.prisma.parcel.update({
       where: { id },
-      data: { status: status as ParcelStatus },
+      data: { status: enumStatus as ParcelStatus },
       include: { sender: true, receiver: true },
     });
+    // Create notification for receiver
+    await this.prisma.notification.create({
+      data: {
+        userId: parcel.receiverId,
+        type: 'parcel_status',
+        title: `Parcel Status Updated`,
+        message: `Your parcel (${parcel.trackingNumber}) status is now: ${enumStatus.replace('_', ' ')}`,
+        parcelId: parcel.id,
+      },
+    });
+    // Create notification for sender (admin)
+    await this.prisma.notification.create({
+      data: {
+        userId: parcel.senderId,
+        type: 'parcel_status',
+        title: `Parcel Status Updated`,
+        message: `A parcel you sent (${parcel.trackingNumber}) status is now: ${enumStatus.replace('_', ' ')}`,
+        parcelId: parcel.id,
+      },
+    });
+    // Create notification for courier (if assigned)
+    if (parcel.courierId) {
+      await this.prisma.notification.create({
+        data: {
+          userId: parcel.courierId,
+          type: 'parcel_status',
+          title: `Parcel Status Updated`,
+          message: `A parcel you are delivering (${parcel.trackingNumber}) status is now: ${enumStatus.replace('_', ' ')}`,
+          parcelId: parcel.id,
+        },
+      });
+    }
+    // Send email to receiver for every status update
+    await this.emailService.sendStatusUpdateReceiver(parcel.receiver.email, {
+      name: parcel.receiver.name,
+      trackingNumber: parcel.trackingNumber,
+      status: parcel.status,
+      estimatedDelivery: parcel.estimatedDelivery ? new Date(parcel.estimatedDelivery).toLocaleString() : '',
+      price: parcel.pricing,
+      destination: parcel.destination,
+      year: new Date().getFullYear(),
+    });
+    // Send email to sender only if delivered
+    if (parcel.status === 'DELIVERED') {
+      await this.emailService.sendStatusUpdateSender(parcel.sender.email, {
+        name: parcel.sender.name,
+        trackingNumber: parcel.trackingNumber,
+        status: parcel.status,
+        estimatedDelivery: parcel.estimatedDelivery ? new Date(parcel.estimatedDelivery).toLocaleString() : '',
+        price: parcel.pricing,
+        destination: parcel.destination,
+        year: new Date().getFullYear(),
+      });
+    }
     return this.toParcelOrder(parcel);
   }
 
@@ -170,6 +255,40 @@ export class ParcelsService {
     return step;
   }
 
+  async getParcelsForCourier(courierId: string, options: ParcelListOptions = {}) {
+    const page = Number(options.page) > 0 ? Number(options.page) : 1;
+    const limit = Number(options.limit) > 0 ? Number(options.limit) : 10;
+    const skip = (page - 1) * limit;
+    const where: any = { courierId, deletedAt: null };
+    const [parcels, total] = await Promise.all([
+      this.prisma.parcel.findMany({ where, skip, take: limit, include: { sender: true, receiver: true } }),
+      this.prisma.parcel.count({ where }),
+    ]);
+    return {
+      data: parcels.map(this.toParcelOrder),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getUserNotifications(userId: string) {
+    return this.prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getParcelById(id: string) {
+    return this.prisma.parcel.findUnique({
+      where: { id },
+      include: { receiver: true },
+    });
+  }
+
   // Helper to map DB parcel to ParcelOrder shape
   toParcelOrder(parcel: any) {
     return {
@@ -182,6 +301,7 @@ export class ParcelsService {
       createdAt: parcel.createdAt,
       trackingNumber: parcel.trackingNumber,
       pricing: parcel.pricing,
+      estimatedDelivery: parcel.estimatedDelivery,
     };
   }
 }

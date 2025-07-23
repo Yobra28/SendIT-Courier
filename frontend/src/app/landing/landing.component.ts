@@ -4,31 +4,42 @@ import { RouterModule } from '@angular/router';
 import { ModalComponent } from '../shared/components/modal.component';
 import { LoginComponent } from '../auth/components/login/login.component';
 import { RegisterComponent } from '../auth/components/register/register.component';
+import { ContactService } from '../shared/services/contact.service';
+import { FormsModule } from '@angular/forms';
+import { NavbarComponent } from '../user/components/dashboard/navbar.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterModule, ModalComponent, LoginComponent, RegisterComponent],
+  imports: [CommonModule, RouterModule, ModalComponent, LoginComponent, RegisterComponent, FormsModule, NavbarComponent],
   template: `
     <div class="landing-container">
-      <nav class="landing-nav">
-        <div class="nav-content">
-          <div class="logo">
-            <span class="logo-icon">📦</span>
-            <span class="logo-text">SendIT</span>
+      <ng-container *ngIf="isLoggedIn(); else guestNav">
+        <app-user-navbar></app-user-navbar>
+      </ng-container>
+      <ng-template #guestNav>
+        <nav class="landing-nav">
+          <div class="nav-content">
+            <div class="logo">
+              <span class="logo-icon">
+                <!-- Box SVG for dark background -->
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2" fill="#fff" stroke="#3b82f6"/><path d="M3 7l9 5 9-5" fill="none" stroke="#3b82f6"/></svg>
+              </span>
+              <span class="logo-text">SendIT</span>
+            </div>
+            <div class="nav-links">
+              <a href="#features">Features</a>
+              <a href="#pricing">Pricing</a>
+              <a href="#contact">Contact</a>
+              <a href="#faq">FAQ</a>
+            </div>
+            <div class="nav-actions">
+              <button class="btn btn-outline" (click)="openLoginModal()">Sign In</button>
+              <button class="btn btn-primary" (click)="openRegisterModal()">Get Started</button>
+            </div>
           </div>
-          <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#contact">Contact</a>
-            <a href="#faq">FAQ</a>
-          </div>
-          <div class="nav-actions">
-            <button class="btn btn-outline" (click)="openLoginModal()">Sign In</button>
-            <button class="btn btn-primary" (click)="openRegisterModal()">Get Started</button>
-          </div>
-        </div>
-      </nav>
+        </nav>
+      </ng-template>
 
       <main class="landing-main">
         <section class="hero-section">
@@ -184,53 +195,63 @@ import { RegisterComponent } from '../auth/components/register/register.componen
           <div class="contact-grid">
             <div class="contact-info">
               <div class="info-block">
-                <div class="icon">📞</div>
-                <div>
-                  <div class="info-title">Phone</div>
-                  <div>+234 (0) 123 456 7890<br/>+234 (0) 987 654 3210</div>
-                </div>
-              </div>
-              <div class="info-block">
-                <div class="icon">✉️</div>
-                <div>
-                  <div class="info-title">Email</div>
-                  <div>info&#64;sendit.com<br/>support&#64;sendit.com</div>
-                </div>
-              </div>
-              <div class="info-block">
-                <div class="icon">📍</div>
-                <div>
-                  <div class="info-title">Address</div>
-                  <div>123 Business District<br/>Lagos, Nigeria</div>
-                </div>
-              </div>
-              <div class="info-block">
-                <div class="icon">⏰</div>
-                <div>
-                  <div class="info-title">Hours</div>
-                  <div>Mon - Fri: 8AM - 8PM<br/>Sat - Sun: 9AM - 6PM</div>
-                </div>
-              </div>
-            </div>
-            <form class="contact-form">
-              <h3>Send us a Message</h3>
-              <div class="form-row">
-                <input type="text" placeholder="First Name" />
-                <input type="text" placeholder="Last Name" />
-              </div>
-              <div class="form-row">
-                <input type="email" placeholder="Email" />
-                <input type="text" placeholder="Subject" />
-              </div>
-              <div class="form-row">
-                <textarea placeholder="Tell us more about your inquiry..."></textarea>
-              </div>
-              <div class="form-row form-row-center">
-                <button class="btn btn-gradient" type="submit">Send Message</button>
-              </div>
-            </form>
-          </div>
-        </section>
+                <div class="icon">
+                  <!-- Phone SVG -->
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.72 19.72 0 0 1 3 5.18 2 2 0 0 1 5 3h4.09a2 2 0 0 1 2 1.72c.13 1.13.37 2.23.72 3.28a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45c1.05.35 2.15.59 3.28.72A2 2 0 0 1 22 16.92z"></path></svg>
+        </div>
+        <div>
+          <div class="info-title">Phone</div>
+          <div>+234 (0) 123 456 7890<br/>+234 (0) 987 654 3210</div>
+        </div>
+      </div>
+      <div class="info-block">
+        <div class="icon">
+          <!-- Email SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div>
+          <div class="info-title">Email</div>
+          <div>info&#64;sendit.com<br/>support&#64;sendit.com</div>
+        </div>
+      </div>
+      <div class="info-block">
+        <div class="icon">
+          <!-- Address SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div>
+          <div class="info-title">Address</div>
+          <div>123 Business District<br/>Lagos, Nigeria</div>
+        </div>
+      </div>
+      <div class="info-block">
+        <div class="icon">
+          <!-- Hours SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div class="info-title">Hours</div>
+          <div>Mon - Fri: 8AM - 8PM<br/>Sat - Sun: 9AM - 6PM</div>
+        </div>
+      </div>
+    </div>
+    <form class="contact-form" (ngSubmit)="submitContact()" #contactForm="ngForm">
+      <h3>Send us a Message</h3>
+      <div class="form-row">
+        <input type="text" placeholder="Name" name="name" [(ngModel)]="contact.name" required />
+        <input type="email" placeholder="Email" name="email" [(ngModel)]="contact.email" required />
+      </div>
+      <div class="form-row">
+        <textarea placeholder="Tell us more about your inquiry..." name="message" [(ngModel)]="contact.message" required></textarea>
+      </div>
+      <div class="form-row form-row-center">
+        <button class="btn btn-gradient" type="submit" [disabled]="loading || !contactForm.form.valid">{{ loading ? 'Sending...' : 'Send Message' }}</button>
+      </div>
+      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    </form>
+  </div>
+</section>
 
         <!-- FAQ Section -->
         <section id="faq" class="faq-section">
@@ -266,7 +287,7 @@ import { RegisterComponent } from '../auth/components/register/register.componen
 
       <!-- Login Modal -->
       <app-modal [open]="showLoginModal" (close)="closeModals()">
-        <app-login [inModal]="true"></app-login>
+        <app-login [inModal]="true" (loginSuccess)="handleLoginSuccess()"></app-login>
       </app-modal>
       <!-- Register Modal -->
       <app-modal [open]="showRegisterModal" (close)="closeModals()">
@@ -277,7 +298,10 @@ import { RegisterComponent } from '../auth/components/register/register.componen
         <div class="footer-content">
           <div class="footer-section">
             <div class="logo">
-              <span class="logo-icon">📦</span>
+              <span class="logo-icon">
+                <!-- Box SVG for dark background -->
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2" fill="#fff" stroke="#3b82f6"/><path d="M3 7l9 5 9-5" fill="none" stroke="#3b82f6"/></svg>
+              </span>
               <span class="logo-text">SendIT</span>
             </div>
             <p>Fast, reliable parcel delivery service you can trust.</p>
@@ -309,11 +333,12 @@ import { RegisterComponent } from '../auth/components/register/register.componen
               <li><a href="#">Terms of Service</a></li>
             </ul>
           </div>
-        </div>
-        <div class="footer-bottom">
-          <p>&copy; 2025 SendIT. All rights reserved.</p>
-        </div>
+          </div>
+          <div style="text-align: center; color: white;">
+            <p style="font-weight: 900; color: white; margin: 0;">&copy; 2025 SendIT. All rights reserved.</p>
+          </div>
       </footer>
+      <div *ngIf="loginSuccessMessage" class="global-success-message">{{ loginSuccessMessage }}</div>
     </div>
   `,
   styles: [`
@@ -563,6 +588,9 @@ import { RegisterComponent } from '../auth/components/register/register.componen
       background: rgba(255, 255, 255, 0.3);
       border-radius: 1px;
     }
+
+
+    
 
     .delivery-path::after {
       content: '';
@@ -964,9 +992,9 @@ import { RegisterComponent } from '../auth/components/register/register.componen
     }
 
     .landing-footer {
-      background: #2563eb;
+      background: #1e293b;
       color: #fff;
-      box-shadow: 0 -2px 16px rgba(37, 99, 235, 0.08);
+      box-shadow: 0 -2px 16px rgba(30, 41, 59, 0.12);
       padding: 3rem 1rem 1rem;
     }
 
@@ -1012,17 +1040,7 @@ import { RegisterComponent } from '../auth/components/register/register.componen
 
     .footer-section ul li a:hover {
       opacity: 1;
-      border-bottom: 2px solid #fff;
-    }
-
-    .footer-bottom {
-      border-top: 1px solid #3b82f6;
-      padding-top: 1rem;
-      text-align: center;
-      color: #fff;
-      font-size: 0.98rem;
-      opacity: 1;
-      background: transparent;
+      border-bottom: 2px solid #3b82f6;
     }
 
     .faq-section {
@@ -1082,6 +1100,43 @@ import { RegisterComponent } from '../auth/components/register/register.componen
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
+    }
+
+    .success-message, .error-message {
+      margin-top: 1rem;
+      padding: 0.8rem 1.2rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .success-message {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .error-message {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .global-success-message {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #d1fae5;
+      color: #065f46;
+      padding: 0.8rem 1.2rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid #a7f3d0;
     }
 
     @media (max-width: 768px) {
@@ -1167,5 +1222,41 @@ export class LandingComponent {
     this.faqOpen[index] = !this.faqOpen[index];
   }
 
-  constructor() {}
+  contact = { name: '', email: '', message: '' };
+  loading = false;
+  successMessage = '';
+  errorMessage = '';
+  loginSuccessMessage = '';
+
+  constructor(private contactService: ContactService) {}
+
+  submitContact() {
+    if (!this.contact.name || !this.contact.email || !this.contact.message) return;
+    this.loading = true;
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.contactService.sendContact(this.contact).subscribe({
+      next: () => {
+        this.successMessage = 'Thank you for contacting us! We have received your message.';
+        this.contact = { name: '', email: '', message: '' };
+        this.loading = false;
+      },
+      error: () => {
+        this.errorMessage = 'There was an error sending your message. Please try again later.';
+        this.loading = false;
+      }
+    });
+  }
+
+  handleLoginSuccess() {
+    this.loginSuccessMessage = 'Login successful!';
+    this.closeModals();
+    setTimeout(() => {
+      this.loginSuccessMessage = '';
+    }, 2000);
+  }
+
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('token');
+  }
 }

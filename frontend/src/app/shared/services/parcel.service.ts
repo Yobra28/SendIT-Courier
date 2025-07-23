@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ParcelService {
-  private baseUrl = `${environment.apiUrl}/parcels`;
+  private baseUrl = 'http://localhost:3000/api/parcels';
 
   constructor(private http: HttpClient) {}
 
@@ -40,8 +41,12 @@ export class ParcelService {
     return this.http.delete(`${this.baseUrl}/${id}`);
   }
 
-  addTrackingStep(parcelId: string, stepData: any) {
-    return this.http.post(`${this.baseUrl}/${parcelId}/steps`, stepData, { withCredentials: true });
+  updateStatus(parcelId: string, status: string): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/${parcelId}/status`, { status });
+  }
+
+  addTrackingStep(parcelId: string, step: { status: string; location: string; lat?: number; lng?: number }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${parcelId}/steps`, step);
   }
 
   geocodeAddress(address: string) {
@@ -56,5 +61,18 @@ export class ParcelService {
         }
       }
     );
+  }
+
+  getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+  }
+
+  getAssignedParcels() {
+    return this.http.get(`${this.baseUrl}/assigned`, this.getAuthHeaders());
+  }
+
+  getUserNotifications() {
+    return this.http.get(`${this.baseUrl}/notifications`, { withCredentials: true });
   }
 } 

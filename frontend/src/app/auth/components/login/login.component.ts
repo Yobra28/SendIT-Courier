@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -26,27 +26,14 @@ interface MockUser {
           <p class="auth-subtitle">Sign in to your account</p>
         </div>
         
-        <div class="demo-credentials">
-          <h3>Demo Credentials</h3>
-          <div class="credentials-grid">
-            <div class="credential-card">
-              <h4>👤 User Account</h4>
-              <p><strong>Email:</strong> user&#64;sendit.com</p>
-              <p><strong>Password:</strong> user123</p>
-              <button class="btn-demo" (click)="fillCredentials('user')">Use User Login</button>
-            </div>
-            <div class="credential-card">
-              <h4>👨‍💼 Admin Account</h4>
-              <p><strong>Email:</strong> admin&#64;sendit.com</p>
-              <p><strong>Password:</strong> admin123</p>
-              <button class="btn-demo" (click)="fillCredentials('admin')">Use Admin Login</button>
-            </div>
-          </div>
-        </div>
+        
         
         <form class="auth-form" #loginForm="ngForm" (ngSubmit)="onLogin(loginForm)">
           <div class="error-message" *ngIf="loginError">
             {{ loginError }}
+          </div>
+          <div class="success-message" *ngIf="loginSuccessMessage">
+            {{ loginSuccessMessage }}
           </div>
 
           <div class="form-group">
@@ -99,6 +86,9 @@ interface MockUser {
             <span *ngIf="!isLoading">Sign In</span>
           </button>
         </form>
+        <div style="text-align:center; margin-bottom:1rem;">
+          <a routerLink="/auth/forgot-password" class="auth-link">Forgot Password?</a>
+        </div>
 
         <div class="auth-footer">
           <p>Don't have an account? <a routerLink="/auth/register" class="auth-link">Sign up</a></p>
@@ -276,6 +266,16 @@ interface MockUser {
       text-decoration: underline;
     }
 
+    .success-message {
+      color: var(--success-600);
+      background-color: var(--success-50);
+      border: 1px solid var(--success-200);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
     @media (max-width: 480px) {
       .auth-card {
         padding: 1.5rem;
@@ -290,6 +290,7 @@ interface MockUser {
 })
 export class LoginComponent {
   @Input() inModal = false;
+  @Output() loginSuccess = new EventEmitter<void>();
 
   loginData = {
     email: '',
@@ -299,6 +300,7 @@ export class LoginComponent {
 
   isLoading = false;
   loginError = '';
+  loginSuccessMessage = '';
 
   constructor(private router: Router, private authService: AuthService) {}
 
@@ -314,41 +316,35 @@ export class LoginComponent {
   }
 
   onLogin(form: any) {
-    console.log('Submitting login form', form);
     if (form.valid) {
       this.isLoading = true;
       this.loginError = '';
-      console.log('Login attempt:', this.loginData);
       this.authService.login({
         email: this.loginData.email,
         password: this.loginData.password
       }).subscribe({
         next: (res) => {
-          console.log('Login observable next');
           this.isLoading = false;
-          console.log('Login success:', res);
-          // Store token/user info as needed
           localStorage.setItem('token', res.token);
           localStorage.setItem('currentUser', JSON.stringify(res.user));
-          // Navigate based on real backend user role
           if (res.user.role === 'ADMIN') {
             this.router.navigate(['/admin/dashboard']);
+          } else if (res.user.role === 'COURIER') {
+            this.router.navigate(['/user/courier/dashboard']);
           } else {
-            this.router.navigate(['/user/dashboard']);
+            // Do not navigate, stay on landing page
           }
+          this.loginSuccessMessage = 'Login successful!';
+          setTimeout(() => {
+            this.loginSuccessMessage = '';
+            this.loginSuccess.emit();
+          }, 1500);
         },
         error: (err) => {
-          console.log('Login observable error');
           this.isLoading = false;
-          console.error('Login error:', err);
           this.loginError = err.error?.message || 'Login failed. Please try again.';
-        },
-        complete: () => {
-          console.log('Login observable complete');
         }
       });
-    } else {
-      console.log('Login form is invalid', form);
     }
   }
 }

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ParcelService } from '../../../shared/services/parcel.service';
+import { Router } from '@angular/router';
 
 interface Parcel {
   id: string;
@@ -21,9 +23,15 @@ interface Parcel {
   template: `
     <div class="parcels-container">
       <div class="parcels-header">
-        <div class="header-content">
-          <h1>My Parcels</h1>
-          <p>Track and manage all your parcels</p>
+        <div class="header-content" style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;">
+          <div>
+            <h1>My Parcels</h1>
+            <p>Track and manage all your parcels</p>
+          </div>
+          <button (click)="goToDashboard()" class="btn btn-primary" style="min-width: 180px; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-icons" style="vertical-align:middle;">arrow_back</span>
+            Back to Dashboard
+          </button>
         </div>
       </div>
 
@@ -93,10 +101,6 @@ interface Parcel {
                 <span class="value">{{ parcel.destination }}</span>
               </div>
               <div class="detail-row">
-                <span class="label">Weight:</span>
-                <span class="value">{{ parcel.weight }}kg</span>
-              </div>
-              <div class="detail-row">
                 <span class="label">Price:</span>
                 <span class="value price">\${{ parcel.price }}</span>
               </div>
@@ -111,15 +115,15 @@ interface Parcel {
             </div>
             
             <div class="parcel-actions">
-              <button class="btn btn-outline">
+              <button class="btn btn-outline" (click)="trackParcel(parcel.trackingNumber)">
                 <span class="material-icons">visibility</span>
                 Track
               </button>
-              <button class="btn btn-outline">
+              <button class="btn btn-outline" (click)="viewMap(parcel.id)">
                 <span class="material-icons">map</span>
                 View Map
               </button>
-              <button class="btn btn-outline">
+              <button class="btn btn-outline" (click)="downloadReceipt(parcel.id)">
                 <span class="material-icons">download</span>
                 Receipt
               </button>
@@ -381,71 +385,41 @@ interface Parcel {
 export class ParcelsComponent implements OnInit {
   searchTerm = '';
   activeFilter = 'all';
-  
-  parcels: Parcel[] = [
-    {
-      id: '1',
-      recipient: 'Sarah Johnson',
-      destination: 'New York, NY',
-      status: 'In Transit',
-      weight: 2.5,
-      price: 45.99,
-      trackingNumber: 'ST123456789',
-      createdAt: new Date('2025-01-15'),
-      estimatedDelivery: new Date('2025-01-18')
-    },
-    {
-      id: '2',
-      recipient: 'Mike Chen',
-      destination: 'Los Angeles, CA',
-      status: 'Delivered',
-      weight: 1.2,
-      price: 29.99,
-      trackingNumber: 'ST123456790',
-      createdAt: new Date('2025-01-14'),
-      estimatedDelivery: new Date('2025-01-16')
-    },
-    {
-      id: '3',
-      recipient: 'Emily Davis',
-      destination: 'Chicago, IL',
-      status: 'Pending',
-      weight: 3.8,
-      price: 67.99,
-      trackingNumber: 'ST123456791',
-      createdAt: new Date('2025-01-13'),
-      estimatedDelivery: new Date('2025-01-17')
-    },
-    {
-      id: '4',
-      recipient: 'David Wilson',
-      destination: 'Miami, FL',
-      status: 'In Transit',
-      weight: 0.8,
-      price: 19.99,
-      trackingNumber: 'ST123456792',
-      createdAt: new Date('2025-01-12'),
-      estimatedDelivery: new Date('2025-01-15')
-    },
-    {
-      id: '5',
-      recipient: 'Lisa Brown',
-      destination: 'Seattle, WA',
-      status: 'Delivered',
-      weight: 4.2,
-      price: 89.99,
-      trackingNumber: 'ST123456793',
-      createdAt: new Date('2025-01-11'),
-      estimatedDelivery: new Date('2025-01-14')
-    }
-  ];
-
+  parcels: Parcel[] = [];
   filteredParcels: Parcel[] = [];
 
-  constructor() {}
+  constructor(private parcelService: ParcelService, private router: Router) {}
 
   ngOnInit(): void {
-    this.filterParcels();
+    // Fetch both sent and received parcels and merge them
+    this.parcelService.getSentParcels().subscribe((sent: any) => {
+      const sentParcels = (sent.data || sent).map((p: any) => ({
+        id: p.id,
+        recipient: p.recipient,
+        destination: p.destination,
+        status: p.status,
+        weight: p.weight || 0,
+        price: p.pricing,
+        trackingNumber: p.trackingNumber,
+        createdAt: new Date(p.createdAt),
+        estimatedDelivery: new Date(p.createdAt),
+      }));
+      this.parcelService.getReceivedParcels().subscribe((received: any) => {
+        const receivedParcels = (received.data || received).map((p: any) => ({
+          id: p.id,
+          recipient: p.recipient,
+          destination: p.destination,
+          status: p.status,
+          weight: p.weight || 0,
+          price: p.pricing,
+          trackingNumber: p.trackingNumber,
+          createdAt: new Date(p.createdAt),
+          estimatedDelivery: new Date(p.createdAt),
+        }));
+        this.parcels = [...sentParcels, ...receivedParcels];
+        this.filterParcels();
+      });
+    });
   }
 
   filterParcels(): void {
@@ -477,14 +451,46 @@ export class ParcelsComponent implements OnInit {
   }
 
   getPendingCount(): number {
-    return this.parcels.filter(p => p.status === 'Pending').length;
+    return this.parcels.filter(p => p.status.toUpperCase() === 'PENDING').length;
   }
 
   getInTransitCount(): number {
-    return this.parcels.filter(p => p.status === 'In Transit').length;
+    return this.parcels.filter(p => p.status.toUpperCase() === 'IN_TRANSIT').length;
   }
 
   getDeliveredCount(): number {
-    return this.parcels.filter(p => p.status === 'Delivered').length;
+    return this.parcels.filter(p => p.status.toUpperCase() === 'DELIVERED').length;
+  }
+
+  goToDashboard() {
+    this.router.navigate(['/user/dashboard']);
+  }
+
+  trackParcel(trackingNumber: string): void {
+    // Navigate to track page with pre-filled tracking number
+    this.router.navigate(['/user/track'], { queryParams: { tracking: trackingNumber } });
+  }
+
+  viewMap(parcelId: string): void {
+    // Navigate to the track page with the parcel ID for map view
+    this.router.navigate(['/user/track'], { queryParams: { parcel: parcelId, map: true } });
+  }
+
+  downloadReceipt(parcelId: string): void {
+    fetch(`http://localhost:3000/api/parcels/${parcelId}/receipt`, {
+      method: 'GET',
+      credentials: 'include', // include cookies if needed for auth
+    })
+      .then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receipt-${parcelId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      });
   }
 }

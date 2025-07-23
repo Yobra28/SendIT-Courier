@@ -23,11 +23,15 @@ interface TrackingStep {
     <div class="track-container">
       <div class="track-header">
         <div class="header-content">
-          <button class="btn btn-outline back-btn" (click)="goToDashboard()">
-            <span class="material-icons">arrow_back</span> Back to Dashboard
-          </button>
-          <h1>Track Your Parcel</h1>
-          <p>Enter your tracking number to see real-time updates</p>
+          <div class="header-row">
+            <button class="btn btn-outline back-btn" (click)="goToDashboard()">
+              <span class="material-icons">arrow_back</span> Back to Dashboard
+            </button>
+            <div class="header-center">
+              <h1>Track Your Parcel</h1>
+              <p>Enter your tracking number to see real-time updates</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -117,17 +121,45 @@ interface TrackingStep {
       max-width: 1200px;
       margin: 0 auto;
       padding: 2rem 1rem;
-      text-align: center;
     }
-
-    .header-content h1 {
-      color: var(--gray-900);
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
       margin-bottom: 0.5rem;
     }
-
-    .header-content p {
+    .header-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1 1 auto;
+    }
+    .header-center h1 {
+      margin: 0;
+      color: var(--gray-900);
+      font-size: 2.2rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .header-center p {
       color: var(--gray-600);
       margin: 0;
+      text-align: center;
+    }
+    .header-row .back-btn {
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+    @media (max-width: 900px) {
+      .header-row {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+      }
+      .header-center h1 {
+        font-size: 1.5rem;
+      }
     }
 
     .track-content {
@@ -394,7 +426,7 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    this.renderLeafletMap();
+    // this.renderLeafletMap(); // Removed as per edit hint
   }
 
   ngOnDestroy() {
@@ -406,17 +438,95 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
     this.leafletMarkers = [];
   }
 
+  async renderMap() {
+    let origin = this.trackingResult?.origin || '';
+    let destination = this.trackingResult?.destination || '';
+    if (origin && !origin.toLowerCase().includes('kenya')) origin += ', Kenya';
+    if (destination && !destination.toLowerCase().includes('kenya')) destination += ', Kenya';
+    const [originRes, destRes] = await Promise.all([
+      this.parcelService.geocodeAddress(origin).toPromise(),
+      this.parcelService.geocodeAddress(destination).toPromise()
+    ]);
+    if (!originRes.length || !destRes.length) return;
+    const originCoords: [number, number] = [parseFloat(originRes[0].lat), parseFloat(originRes[0].lon)];
+    const destCoords: [number, number] = [parseFloat(destRes[0].lat), parseFloat(destRes[0].lon)];
+    setTimeout(() => {
+      if (this.leafletMap) {
+        this.leafletMap.remove();
+        this.leafletMap = null;
+      }
+      // Find latest step with lat/lng
+      const latestStep = this.trackingResult?.steps?.slice().reverse().find((s: any) => s.lat && s.lng);
+      if (latestStep) {
+        const liveCoords: [number, number] = [latestStep.lat, latestStep.lng];
+        this.leafletMap = L.map('liveMap', {
+          center: liveCoords,
+          zoom: 14,
+          zoomControl: false,
+          attributionControl: false,
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+        }).addTo(this.leafletMap);
+        L.marker(liveCoords, {
+          title: 'Current Location',
+          icon: L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            shadowSize: [41, 41],
+            shadowAnchor: [12, 41],
+            className: 'latest-location-marker'
+          })
+        }).addTo(this.leafletMap!);
+      } else {
+        // Fallback: show route from origin to destination
+        this.leafletMap = L.map('liveMap', {
+          center: originCoords,
+          zoom: 6,
+          zoomControl: false,
+          attributionControl: false,
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+        }).addTo(this.leafletMap);
+        this.leafletPolyline = L.polyline([originCoords, destCoords], { color: '#2563eb', weight: 4 }).addTo(this.leafletMap);
+        L.marker(originCoords, {
+          title: 'Origin',
+          icon: L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            shadowSize: [41, 41],
+            shadowAnchor: [12, 41]
+          })
+        }).addTo(this.leafletMap!);
+        L.marker(destCoords, {
+          title: 'Destination',
+          icon: L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            shadowSize: [41, 41],
+            shadowAnchor: [12, 41]
+          })
+        }).addTo(this.leafletMap!);
+        this.leafletMap.fitBounds(this.leafletPolyline.getBounds(), { padding: [30, 30] });
+      }
+    }, 0);
+  }
+
   trackParcel(): void {
     if (!this.trackingNumber) return;
-
     this.isLoading = true;
     this.showNoResult = false;
     this.trackingResult = null;
-
     this.parcelService.getParcelByTrackingNumber(this.trackingNumber.trim()).subscribe({
-      next: (res: any) => {
+      next: async (res: any) => {
         if (res && !res.message) {
-          // Use real steps from backend if available, fallback to single step
           const steps = Array.isArray(res.steps) && res.steps.length > 0 ? res.steps.map((step: any) => ({
             status: step.status,
             description: step.description,
@@ -439,12 +549,13 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
           this.trackingResult = {
             recipient: res.recipient,
             destination: res.destination,
+            origin: res.origin || res.pickupLocation, // Fallback to pickupLocation if origin is missing
             trackingNumber: res.trackingNumber,
             status: res.status,
             steps,
           };
           this.isLoading = false;
-          this.renderLeafletMap();
+          await this.renderMap();
         } else {
           this.isLoading = false;
           this.showNoResult = true;
@@ -462,46 +573,46 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
   }
 
   // Update renderLeafletMap to show only the route between sender and receiver
-  async renderLeafletMap() {
-    setTimeout(async () => {
-      let coords: [number, number][] = [];
-      if (this.trackingResult && this.trackingResult.origin && this.trackingResult.destination) {
-        try {
-          const [originRes, destRes] = await Promise.all([
-            this.parcelService.geocodeAddress(this.trackingResult.origin).toPromise(),
-            this.parcelService.geocodeAddress(this.trackingResult.destination).toPromise()
-          ]);
-          if (originRes && originRes.length && destRes && destRes.length) {
-            const originCoords: [number, number] = [parseFloat(originRes[0].lat), parseFloat(originRes[0].lon)];
-            const destCoords: [number, number] = [parseFloat(destRes[0].lat), parseFloat(destRes[0].lon)];
-            coords = [originCoords, destCoords];
-          }
-        } catch (e) {
-          // Geocoding failed
-          coords = [];
-        }
-      }
-      if (!document.getElementById('liveMap')) return;
-      if (!coords.length) return;
-      if (this.leafletMap) {
-        this.leafletMap.remove();
-        this.leafletMap = null;
-      }
-      this.leafletMap = L.map('liveMap', {
-        center: coords[0],
-        zoom: 6,
-        zoomControl: false,
-        attributionControl: false,
-      });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(this.leafletMap);
-      // Draw polyline
-      this.leafletPolyline = L.polyline(coords, { color: '#2563eb', weight: 4 }).addTo(this.leafletMap);
-      // Add markers for sender and receiver
-      L.marker(coords[0], { title: 'Sender' }).addTo(this.leafletMap!);
-      L.marker(coords[1], { title: 'Receiver' }).addTo(this.leafletMap!);
-      this.leafletMap.fitBounds(this.leafletPolyline.getBounds(), { padding: [30, 30] });
-    }, 0);
-  }
+  // async renderLeafletMap() { // Removed as per edit hint
+  //   setTimeout(async () => { // Removed as per edit hint
+  //     let coords: [number, number][] = []; // Removed as per edit hint
+  //     if (this.trackingResult && this.trackingResult.origin && this.trackingResult.destination) { // Removed as per edit hint
+  //       try { // Removed as per edit hint
+  //         const [originRes, destRes] = await Promise.all([ // Removed as per edit hint
+  //           this.parcelService.geocodeAddress(this.trackingResult.origin).toPromise(), // Removed as per edit hint
+  //           this.parcelService.geocodeAddress(this.trackingResult.destination).toPromise() // Removed as per edit hint
+  //         ]); // Removed as per edit hint
+  //         if (originRes && originRes.length && destRes && destRes.length) { // Removed as per edit hint
+  //           const originCoords: [number, number] = [parseFloat(originRes[0].lat), parseFloat(originRes[0].lon)]; // Removed as per edit hint
+  //           const destCoords: [number, number] = [parseFloat(destRes[0].lat), parseFloat(destRes[0].lon)]; // Removed as per edit hint
+  //           coords = [originCoords, destCoords]; // Removed as per edit hint
+  //         } // Removed as per edit hint
+  //       } catch (e) { // Removed as per edit hint
+  //         // Geocoding failed // Removed as per edit hint
+  //         coords = []; // Removed as per edit hint
+  //       } // Removed as per edit hint
+  //     } // Removed as per edit hint
+  //     if (!document.getElementById('liveMap')) return; // Removed as per edit hint
+  //     if (!coords.length) return; // Removed as per edit hint
+  //     if (this.leafletMap) { // Removed as per edit hint
+  //       this.leafletMap.remove(); // Removed as per edit hint
+  //       this.leafletMap = null; // Removed as per edit hint
+  //     } // Removed as per edit hint
+  //     this.leafletMap = L.map('liveMap', { // Removed as per edit hint
+  //       center: coords[0], // Removed as per edit hint
+  //       zoom: 6, // Removed as per edit hint
+  //       zoomControl: false, // Removed as per edit hint
+  //       attributionControl: false, // Removed as per edit hint
+  //     }); // Removed as per edit hint
+  //     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { // Removed as per edit hint
+  //       maxZoom: 19, // Removed as per edit hint
+  //     }).addTo(this.leafletMap); // Removed as per edit hint
+  //     // Draw polyline // Removed as per edit hint
+  //     this.leafletPolyline = L.polyline(coords, { color: '#2563eb', weight: 4 }).addTo(this.leafletMap); // Removed as per edit hint
+  //     // Add markers for sender and receiver // Removed as per edit hint
+  //     L.marker(coords[0], { title: 'Sender' }).addTo(this.leafletMap!); // Removed as per edit hint
+  //     L.marker(coords[1], { title: 'Receiver' }).addTo(this.leafletMap!); // Removed as per edit hint
+  //     this.leafletMap.fitBounds(this.leafletPolyline.getBounds(), { padding: [30, 30] }); // Removed as per edit hint
+  //   }, 0); // Removed as per edit hint
+  // } // Removed as per edit hint
 }

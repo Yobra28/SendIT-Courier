@@ -5,6 +5,8 @@ import { ModalComponent } from '../../../shared/components/modal.component';
 import { NavbarComponent } from './navbar.component';
 import { FormsModule } from '@angular/forms';
 import { ParcelService } from '../../../shared/services/parcel.service';
+import { ContactService, ContactPayload } from '../../../shared/services/contact.service';
+import { UserService } from '../../../shared/services/user.service';
 
 interface RecentParcel {
   id: string;
@@ -254,12 +256,8 @@ export class DashboardComponent implements OnInit {
   historyModalOpen = false;
   supportModalOpen = false;
 
-  // Dummy user history data
-  userHistory = [
-    { date: '2025-01-10', action: 'Created parcel', details: 'Parcel to Abuja' },
-    { date: '2025-01-12', action: 'Updated address', details: 'Changed to new address' },
-    { date: '2025-01-14', action: 'Parcel delivered', details: 'Parcel to Lagos delivered' },
-  ];
+  userProfile: any = null;
+  userHistory: any[] = [];
 
   // Support form state
   supportForm = {
@@ -269,13 +267,30 @@ export class DashboardComponent implements OnInit {
   };
   supportFormSubmitted = false;
 
-  constructor(private router: Router, private parcelService: ParcelService) {}
+  constructor(
+    private router: Router,
+    private parcelService: ParcelService,
+    private contactService: ContactService,
+    private userService: UserService
+  ) {}
 
   ngOnInit(): void {
     this.loadingSent = true;
     this.loadingReceived = true;
     this.errorSent = null;
     this.errorReceived = null;
+
+    // Fetch user profile for support form and history
+    this.userService.getProfile().subscribe({
+      next: (user: any) => {
+        this.userProfile = user;
+        this.supportForm.name = user.name || '';
+        this.supportForm.email = user.email || '';
+      },
+      error: () => {
+        this.userProfile = null;
+      }
+    });
 
     this.parcelService.getSentParcels().subscribe({
       next: (res: any) => {
@@ -290,6 +305,7 @@ export class DashboardComponent implements OnInit {
           estimatedDelivery: new Date(p.createdAt),
         }));
         this.loadingSent = false;
+        this.updateUserHistory();
       },
       error: (err) => {
         this.errorSent = 'Failed to load sent parcels.';
@@ -310,12 +326,43 @@ export class DashboardComponent implements OnInit {
           estimatedDelivery: new Date(p.createdAt),
         }));
         this.loadingReceived = false;
+        this.updateUserHistory();
       },
       error: (err) => {
         this.errorReceived = 'Failed to load received parcels.';
         this.loadingReceived = false;
       }
     });
+  }
+
+  updateUserHistory() {
+    // Combine sent and received parcels for history
+    const events: any[] = [];
+    this.sentParcels.forEach((p) => {
+      events.push({
+        date: p.createdAt.toLocaleDateString(),
+        action: 'Created parcel',
+        details: `To ${p.destination} (Tracking: ${p.trackingNumber})`
+      });
+      if (p.status && p.status.toLowerCase() === 'delivered') {
+        events.push({
+          date: p.estimatedDelivery.toLocaleDateString(),
+          action: 'Parcel delivered',
+          details: `To ${p.destination} (Tracking: ${p.trackingNumber})`
+        });
+      }
+    });
+    this.receivedParcels.forEach((p) => {
+      if (p.status && p.status.toLowerCase() === 'delivered') {
+        events.push({
+          date: p.estimatedDelivery.toLocaleDateString(),
+          action: 'Received parcel',
+          details: `From ${p.recipient} (Tracking: ${p.trackingNumber})`
+        });
+      }
+    });
+    // Sort by date descending
+    this.userHistory = events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
   trackParcel(trackingNumber: string): void {
@@ -354,6 +401,11 @@ export class DashboardComponent implements OnInit {
   }
 
   openSupportModal(): void {
+    // Pre-fill support form with user profile if available
+    if (this.userProfile) {
+      this.supportForm.name = this.userProfile.name || '';
+      this.supportForm.email = this.userProfile.email || '';
+    }
     this.supportModalOpen = true;
   }
   closeSupportModal(): void {
@@ -363,11 +415,22 @@ export class DashboardComponent implements OnInit {
   }
 
   submitSupportForm(): void {
-    this.supportFormSubmitted = true;
-    // Here you would send the form data to your backend
-    setTimeout(() => {
-      this.closeSupportModal();
-    }, 1500);
+    const payload: ContactPayload = {
+      name: this.supportForm.name,
+      email: this.supportForm.email,
+      message: this.supportForm.message,
+    };
+    this.contactService.sendContact(payload).subscribe({
+      next: () => {
+        this.supportFormSubmitted = true;
+        setTimeout(() => {
+          this.closeSupportModal();
+        }, 1500);
+      },
+      error: (err) => {
+        alert('Failed to send message: ' + (err.error?.message || 'Unknown error'));
+      },
+    });
   }
 
   setParcelTab(tab: 'sent' | 'received') {

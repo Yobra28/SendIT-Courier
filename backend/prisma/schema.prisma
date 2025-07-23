@@ -17,6 +17,7 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  COURIER
 }
 
 enum ParcelStatus {
@@ -35,19 +36,28 @@ model User {
   role            Role      @default(USER)
   parcelsSent     Parcel[]  @relation("SentParcels")
   parcelsReceived Parcel[]  @relation("ReceivedParcels")
+  courierParcels  Parcel[]  @relation("CourierParcels")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime? // Soft delete
   resetCode        String?
   resetCodeExpiry  DateTime?
+  notifications   Notification[]
+  notifyEmail     Boolean   @default(true)
+  notifySms       Boolean   @default(false)
+  notifyPush      Boolean   @default(true)
+  twoFactorEnabled Boolean  @default(false)
+  twoFactorSecret  String?
 }
 
 model Parcel {
   id             String      @id @default(uuid())
   senderId       String
   receiverId     String
+  courierId      String?
   sender         User        @relation("SentParcels", fields: [senderId], references: [id])
   receiver       User        @relation("ReceivedParcels", fields: [receiverId], references: [id])
+  courier        User?       @relation("CourierParcels", fields: [courierId], references: [id])
   status         ParcelStatus @default(PENDING)
   pickupLocation String
   destination    String
@@ -57,6 +67,8 @@ model Parcel {
   updatedAt      DateTime    @updatedAt
   deletedAt      DateTime?   // Soft delete
   trackingSteps  ParcelTrackingStep[]
+  notifications  Notification[]
+  estimatedDelivery DateTime?
 }
 
 model ParcelTrackingStep {
@@ -68,4 +80,17 @@ model ParcelTrackingStep {
   lat       Float
   lng       Float
   timestamp DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  parcelId  String?
+  parcel    Parcel?  @relation(fields: [parcelId], references: [id])
 }

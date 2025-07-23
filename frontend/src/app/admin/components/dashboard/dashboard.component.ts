@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
-import { LeafletModule } from '@asymmetrik/ngx-leaflet';
-import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../shared/services/admin.service';
@@ -48,8 +46,7 @@ interface AdminUser {
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
-    LeafletModule,
-    // Remove: NgSelectModule, // Ensure NgSelectModule is included here
+    // Remove: LeafletModule, // Ensure NgSelectModule is included here
   ],
   template: `
     <nav class="admin-navbar">
@@ -150,6 +147,10 @@ interface AdminUser {
             <button class="btn btn-primary" (click)="showCreateForm = true">
               <span class="material-icons">add</span>
               Create Parcel Order
+            </button>
+            <button class="btn btn-secondary" (click)="showCreateCourierForm = true">
+              <span class="material-icons">person_add</span>
+              Create Courier
             </button>
           </div>
         </div>
@@ -271,6 +272,17 @@ interface AdminUser {
                       <option [value]="2000">Overnight (₦2,000)</option>
                     </select>
                   </div>
+                  <div class="form-group">
+                    <label for="courier" class="form-label">Assign Courier</label>
+                    <select id="courier" class="form-control" formControlName="courierId">
+                      <option value="">Select courier</option>
+                      <option *ngFor="let courier of couriers" [value]="courier.id">{{ courier.name }} ({{ courier.email }})</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="estimatedDelivery" class="form-label">Estimated Delivery</label>
+                    <input type="datetime-local" id="estimatedDelivery" class="form-control" formControlName="estimatedDelivery" />
+                  </div>
                 </div>
                 <div class="form-actions">
                   <button type="button" class="btn btn-outline" (click)="showCreateForm = false">Cancel</button>
@@ -383,15 +395,6 @@ interface AdminUser {
                    <b>{{ selectedOrder.destination }}</b>
                  </div>
                  <div style="height: 350px; width: 100%; margin: 0 auto;">
-                   <ng-container *ngIf="leafletFitBounds as bounds; else noMap">
-                     <div
-                       leaflet
-                       [leafletOptions]="leafletOptions"
-                       [leafletFitBounds]="bounds"
-                       [leafletLayers]="leafletLayers"
-                       style="height: 100%; width: 100%; border-radius: 1rem; box-shadow: var(--shadow-md);"
-                     ></div>
-                   </ng-container>
                    <ng-template #noMap>
                      <div style="margin-top: 1rem; color: var(--gray-500); font-size: 0.95em;">
                        (Unable to load map for these addresses)
@@ -458,7 +461,7 @@ interface AdminUser {
                     <button class="action-btn" (click)="openModal('map', order)">
                       <span class="material-icons">map</span>
                     </button>
-                    <button class="action-btn" (click)="deleteOrder(order)">
+                    <button class="action-btn" (click)="confirmDelete(order)">
                       <span class="material-icons">delete</span>
                     </button>
                   </div>
@@ -502,6 +505,60 @@ interface AdminUser {
             </div>
           </div>
         </ng-container>
+      </div>
+    </div>
+    <div *ngIf="parcelToDelete" class="modal-backdrop" (click)="cancelDelete()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="form-header">
+          <h2>Confirm Deletion</h2>
+          <button class="close-btn" (click)="cancelDelete()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="settings-content">
+          <p>Are you sure you want to delete this parcel order?</p>
+          <div class="settings-form-actions">
+            <button type="button" class="btn btn-outline" (click)="cancelDelete()">Cancel</button>
+            <button type="button" class="btn btn-danger" (click)="deleteOrder(parcelToDelete!)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="showCreateCourierForm" class="modal-backdrop" (click)="showCreateCourierForm = false">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="form-header">
+          <h2>Create New Courier</h2>
+          <button class="close-btn" (click)="showCreateCourierForm = false">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <form [formGroup]="courierForm" (ngSubmit)="createCourier()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="courierName" class="form-label">Name</label>
+              <input type="text" id="courierName" class="form-control" formControlName="name" />
+            </div>
+            <div class="form-group">
+              <label for="courierEmail" class="form-label">Email</label>
+              <input type="email" id="courierEmail" class="form-control" formControlName="email" />
+            </div>
+            <div class="form-group">
+              <label for="courierPhone" class="form-label">Phone</label>
+              <input type="text" id="courierPhone" class="form-control" formControlName="phone" />
+            </div>
+            <div class="form-group">
+              <label for="courierPassword" class="form-label">Password</label>
+              <input type="password" id="courierPassword" class="form-control" formControlName="password" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" (click)="showCreateCourierForm = false">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!courierForm.valid || isCreatingCourier">
+              <span *ngIf="isCreatingCourier" class="spinner"></span>
+              <span *ngIf="!isCreatingCourier">Create Courier</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   `,
@@ -1180,14 +1237,7 @@ export class AdminDashboardComponent implements OnInit {
   recentOrders: ParcelOrder[] = [];
   activeModal: 'edit' | 'view' | 'map' | null = null;
   selectedOrder: ParcelOrder | null = null;
-  leafletOptions = {
-    layers: [L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 })],
-    zoom: 5,
-    center: L.latLng(0, 0)
-  };
-  leafletMarkers: L.Marker[] = [];
-  leafletPolyline: L.Polyline | null = null;
-  leafletFitBounds: L.LatLngBounds | null = null;
+  // Remove: leafletOptions, leafletMarkers, leafletPolyline, leafletFitBounds fields
   settingsModalOpen = false;
   settingsTab: 'profile' | 'notifications' | 'security' = 'profile';
   settingsProfile = {
@@ -1206,6 +1256,7 @@ export class AdminDashboardComponent implements OnInit {
   settingsToastTimeout: any = null;
   activeTab: 'packages' | 'users' = 'packages';
   users: AdminUser[] = [];
+  couriers: any[] = [];
   addUser() { alert('Add user functionality coming soon!'); }
   viewUser(user: AdminUser) { alert('View user: ' + user.name); }
   editUser(user: AdminUser) { alert('Edit user: ' + user.name); }
@@ -1220,10 +1271,11 @@ export class AdminDashboardComponent implements OnInit {
   setSenderByEmail(email: string) {
     const user = this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (user) {
-      this.parcelForm.get('sender')?.setValue(user.id);
+      // If you want to store senderId, set it here. Otherwise, remove sender from the form and payload.
+      // this.parcelForm.get('sender')?.setValue(user.id);
       this.senderEmailError = false;
     } else {
-      this.parcelForm.get('sender')?.setValue('');
+      // this.parcelForm.get('sender')?.setValue('');
       this.senderEmailError = true;
     }
   }
@@ -1231,12 +1283,62 @@ export class AdminDashboardComponent implements OnInit {
   setRecipientByEmail(email: string) {
     const user = this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (user) {
-      this.parcelForm.get('recipient')?.setValue(user.id);
+      this.parcelForm.get('recipient')?.setValue(user.id); // Set the user ID, not the email
       this.recipientEmailError = false;
     } else {
       this.parcelForm.get('recipient')?.setValue('');
       this.recipientEmailError = true;
     }
+  }
+
+  // Add state for delete confirmation
+  parcelToDelete: ParcelOrder | null = null;
+
+  // Show confirmation modal
+  confirmDelete(parcel: ParcelOrder) {
+    this.parcelToDelete = parcel;
+  }
+
+  // Cancel deletion
+  cancelDelete() {
+    this.parcelToDelete = null;
+  }
+
+  // Confirm and delete
+  deleteOrder(parcel: ParcelOrder) {
+    this.adminService.deleteParcel(parcel.id).subscribe({
+      next: () => {
+        this.loadParcels();
+        this.showSettingsToastMsg('Parcel deleted successfully!');
+        this.parcelToDelete = null;
+      },
+      error: () => {
+        this.showSettingsToastMsg('Failed to delete parcel.');
+        this.parcelToDelete = null;
+      }
+    });
+  }
+
+  showCreateCourierForm = false;
+  isCreatingCourier = false;
+  courierForm: FormGroup;
+
+  createCourier() {
+    if (this.courierForm.invalid) return;
+    this.isCreatingCourier = true;
+    const payload = { ...this.courierForm.value, role: 'COURIER' };
+    this.adminService.createUser(payload).subscribe({
+      next: () => {
+        this.isCreatingCourier = false;
+        this.showCreateCourierForm = false;
+        this.courierForm.reset();
+        this.loadUsers && this.loadUsers();
+      },
+      error: () => {
+        this.isCreatingCourier = false;
+        alert('Failed to create courier.');
+      }
+    });
   }
 
   constructor(
@@ -1250,8 +1352,10 @@ export class AdminDashboardComponent implements OnInit {
       recipient: ['', Validators.required], // user ID (from email lookup)
       origin: ['', Validators.required], // pickupLocation
       destination: ['', Validators.required],
-      category: [''], // keep for UI, not sent to backend
-      pricing: [500, Validators.required],
+      category: ['', [Validators.required]], // keep for UI, not sent to backend
+      pricing: [500, [Validators.required]],
+      courierId: [''], // Add courierId field
+      estimatedDelivery: ['', Validators.required],
     });
     this.editForm = this.fb.group({
       status: ['', [Validators.required]],
@@ -1260,6 +1364,12 @@ export class AdminDashboardComponent implements OnInit {
       origin: ['', [Validators.required]],
       destination: ['', [Validators.required]],
     });
+    this.courierForm = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      phone: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+    });
   }
 
   ngOnInit(): void {
@@ -1267,6 +1377,18 @@ export class AdminDashboardComponent implements OnInit {
     this.loadStats();
     this.loadParcels();
     this.loadUsers();
+    this.loadCouriers();
+  }
+
+  loadCouriers() {
+    this.adminService.getUsers().subscribe({
+      next: (res) => {
+        this.couriers = (res.data || res).filter((u: any) => u.role === 'COURIER');
+      },
+      error: () => {
+        this.couriers = [];
+      }
+    });
   }
 
   loadStats() {
@@ -1288,33 +1410,29 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   createParcel(): void {
-    if (this.parcelForm.valid) {
-      this.isCreating = true;
-      // Build the DTO for backend
-      const formValue = this.parcelForm.value;
-      const payload: any = {
-        receiverId: formValue.recipient, // recipient field holds the user ID
-        pickupLocation: formValue.origin,
-        destination: formValue.destination,
-        pricing: parseInt(formValue.pricing, 10)
-      };
-      this.adminService.createParcel(payload).subscribe({
-        next: (newOrder) => {
-          this.isCreating = false;
-          this.showCreateForm = false;
-          this.parcelForm.reset();
-          this.loadParcels();
-          this.loadStats();
-        },
-        error: () => {
-          this.isCreating = false;
-        }
-      });
-    }
-  }
-
-  updateStatus(orderId: string): void {
-    console.log('Update status for order:', orderId);
+    if (this.parcelForm.invalid) return;
+    this.isCreating = true;
+    const formValue = this.parcelForm.value;
+    const payload: any = {
+      receiverId: formValue.recipient,
+      pickupLocation: formValue.origin,
+      destination: formValue.destination,
+      pricing: parseInt(formValue.pricing, 10),
+      courierId: formValue.courierId || undefined,
+      estimatedDelivery: formValue.estimatedDelivery ? new Date(formValue.estimatedDelivery).toISOString() : undefined
+    };
+    this.adminService.createParcel(payload).subscribe({
+      next: () => {
+        this.isCreating = false;
+        this.showCreateForm = false;
+        this.parcelForm.reset();
+        this.loadParcels();
+      },
+      error: () => {
+        this.isCreating = false;
+        alert('Failed to create parcel.');
+      }
+    });
   }
 
   async openModal(type: 'edit' | 'view' | 'map', order: ParcelOrder) {
@@ -1329,57 +1447,56 @@ export class AdminDashboardComponent implements OnInit {
         destination: order.destination,
       });
     }
-    if (type === 'map') {
-      await this.loadLeafletMap(order.origin, order.destination);
-    }
+    // Remove: await this.loadLeafletMap(order.origin, order.destination);
   }
 
-  async loadLeafletMap(origin: string, destination: string) {
-    const [originLoc, destLoc] = await Promise.all([
-      this.nominatimGeocode(origin),
-      this.nominatimGeocode(destination)
-    ]);
-    if (originLoc && destLoc) {
-      this.leafletOptions = {
-        ...this.leafletOptions,
-        center: L.latLng(originLoc.lat, originLoc.lon),
-        zoom: 7
-      };
-      this.leafletMarkers = [
-        L.marker([originLoc.lat, originLoc.lon], { icon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] }) }).bindPopup('Origin'),
-        L.marker([destLoc.lat, destLoc.lon], { icon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] }) }).bindPopup('Destination')
-      ];
-      this.leafletPolyline = L.polyline([
-        [originLoc.lat, originLoc.lon],
-        [destLoc.lat, destLoc.lon]
-      ], { color: 'blue' });
-      this.leafletFitBounds = L.latLngBounds([
-        [originLoc.lat, originLoc.lon],
-        [destLoc.lat, destLoc.lon]
-      ]);
-    } else {
-      this.leafletMarkers = [];
-      this.leafletPolyline = null;
-      this.leafletFitBounds = null;
-    }
-  }
+  // Remove: async loadLeafletMap(origin: string, destination: string) {
+  // Remove:   const [originLoc, destLoc] = await Promise.all([
+  // Remove:     this.nominatimGeocode(origin),
+  // Remove:     this.nominatimGeocode(destination)
+  // Remove:   ]);
+  // Remove:   if (originLoc && destLoc) {
+  // Remove:     this.leafletOptions = {
+  // Remove:       ...this.leafletOptions,
+  // Remove:       center: L.latLng(originLoc.lat, originLoc.lon),
+  // Remove:       zoom: 7
+  // Remove:     };
+  // Remove:     this.leafletMarkers = [
+  // Remove:       L.marker([originLoc.lat, originLoc.lon], { icon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] }) }).bindPopup('Origin'),
+  // Remove:       L.marker([destLoc.lat, destLoc.lon], { icon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] }) }).bindPopup('Destination')
+  // Remove:     ];
+  // Remove:     this.leafletPolyline = L.polyline([
+  // Remove:       [originLoc.lat, originLoc.lon],
+  // Remove:       [destLoc.lat, destLoc.lon]
+  // Remove:     ], { color: 'blue' });
+  // Remove:     this.leafletFitBounds = L.latLngBounds([
+  // Remove:       [originLoc.lat, originLoc.lon],
+  // Remove:       [destLoc.lat, destLoc.lon]
+  // Remove:     ]);
+  // Remove:   } else {
+  // Remove:     this.leafletMarkers = [];
+  // Remove:     this.leafletPolyline = null;
+  // Remove:     this.leafletFitBounds = null;
+  // Remove:   }
+  // Remove: }
 
-  async nominatimGeocode(address: string): Promise<{ lat: number, lon: number } | null> {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-    try {
-      const results = await fetch(url).then(res => res.json());
-      if (results && results.length > 0) {
-        return { lat: parseFloat(results[0].lat), lon: parseFloat(results[0].lon) };
-      }
-    } catch (e) {}
-    return null;
-  }
+  // Remove: async nominatimGeocode(address: string): Promise<{ lat: number, lon: number } | null> {
+  // Remove:   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+  // Remove:   try {
+  // Remove:     const results = await fetch(url).then(res => res.json());
+  // Remove:     if (results && results.length > 0) {
+  // Remove:       return { lat: parseFloat(results[0].lat), lon: parseFloat(results[0].lon) };
+  // Remove:     }
+  // Remove:   } catch (e) {}
+  // Remove:   return null;
+  // Remove: }
 
   saveEdit() {
     if (this.editForm.valid && this.selectedOrder) {
       this.adminService.updateParcelStatus(this.selectedOrder.id, this.editForm.value.status).subscribe({
         next: () => {
           this.loadParcels();
+          this.showSettingsToastMsg('Parcel status updated successfully!');
           this.closeModal();
         }
       });
@@ -1396,18 +1513,54 @@ export class AdminDashboardComponent implements OnInit {
     this.showSettingsToastMsg('Tracking number copied!');
   }
 
-  get leafletLayers(): L.Layer[] {
-    const layers: L.Layer[] = [...this.leafletMarkers];
-    if (this.leafletPolyline) layers.push(this.leafletPolyline);
-    return layers;
-  }
+  // Remove: get leafletLayers(): L.Layer[] {
+  // Remove:   const layers: L.Layer[] = [...this.leafletMarkers];
+  // Remove:   if (this.leafletPolyline) layers.push(this.leafletPolyline);
+  // Remove:   return layers;
+  // Remove: }
 
-  openSettings() { this.settingsModalOpen = true; this.settingsTab = 'profile'; }
+  openSettings() {
+    this.settingsModalOpen = true;
+    this.settingsTab = 'profile';
+    this.adminService.getProfile().subscribe({
+      next: (profile) => {
+        this.settingsProfile = {
+          fullName: profile.name || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          address: profile.address || ''
+        };
+      }
+    });
+  }
   closeSettings() { this.settingsModalOpen = false; }
   selectSettingsTab(tab: 'profile' | 'notifications' | 'security') { this.settingsTab = tab; }
   saveProfile() {
-    this.showSettingsToastMsg('Profile updated!');
-    this.closeSettings();
+    const payload: any = {
+      name: this.settingsProfile.fullName?.trim() || '',
+      email: this.settingsProfile.email?.trim() || '',
+      phone: this.settingsProfile.phone?.trim() || '',
+      address: this.settingsProfile.address?.trim() || ''
+    };
+    // Remove empty optional fields
+    if (!payload.phone) delete payload.phone;
+    if (!payload.address) delete payload.address;
+
+    // Validate required fields
+    if (!payload.name || !payload.email) {
+      this.showSettingsToastMsg('Name and email are required.');
+      return;
+    }
+    console.log('PATCH /users/me payload:', payload);
+    this.adminService.updateProfile(payload).subscribe({
+      next: () => {
+        this.showSettingsToastMsg('Profile updated successfully!');
+        this.closeSettings();
+      },
+      error: () => {
+        this.showSettingsToastMsg('Failed to update profile.');
+      }
+    });
   }
   saveNotifications() {
     this.showSettingsToastMsg('Notification preferences updated!');
@@ -1429,14 +1582,5 @@ export class AdminDashboardComponent implements OnInit {
   logout() {
     // Implement logout logic
     this.router.navigate(['/']);
-  }
-
-  deleteOrder(order: ParcelOrder) {
-    this.adminService.deleteParcel(order.id).subscribe({
-      next: () => {
-        this.loadParcels();
-        this.loadStats();
-      }
-    });
   }
 }
