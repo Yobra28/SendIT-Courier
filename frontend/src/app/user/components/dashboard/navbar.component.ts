@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { ParcelService } from '../../../shared/services/parcel.service';
 import { UserService } from '../../../shared/services/user.service';
 
@@ -26,13 +26,20 @@ export class NavbarComponent implements OnInit {
     private elementRef: ElementRef,
     private parcelService: ParcelService,
     private userService: UserService
-  ) {}
+  ) {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.fetchAllData();
+      }
+    });
+  }
 
   showNotifications = false;
   showSettingsModal = false;
   showProfileModal = false;
   settingsTab: 'profile' | 'notifications' | 'security' = 'profile';
   notifications: any[] = [];
+  role: string | null = null;
 
   profileForm = {
     fullName: 'John Doe',
@@ -64,8 +71,16 @@ export class NavbarComponent implements OnInit {
   twoFAResult: 'success' | 'failure' | '' = '';
 
   ngOnInit() {
+    this.fetchAllData();
+  }
+
+  fetchAllData() {
     this.fetchNotifications();
     this.fetchUserProfile();
+  }
+
+  get userRole(): string | null {
+    return this.role;
   }
 
   fetchNotifications() {
@@ -95,6 +110,7 @@ export class NavbarComponent implements OnInit {
         sms: user.notifySms,
         push: user.notifyPush
       };
+      this.role = user.role || null;
     });
   }
 

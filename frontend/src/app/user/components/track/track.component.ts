@@ -28,8 +28,10 @@ interface TrackingStep {
               <span class="material-icons">arrow_back</span> Back to Dashboard
             </button>
             <div class="header-center">
-              <h1>Track Your Parcel</h1>
-              <p>Enter your tracking number to see real-time updates</p>
+              <div style="text-align: right;">
+                <h1>Track Your Parcel</h1>
+                <p>Enter your tracking number to see real-time updates</p>
+              </div>
             </div>
           </div>
         </div>
@@ -409,6 +411,7 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
   private leafletPolyline: L.Polyline | null = null;
   private leafletMarkers: L.Marker[] = [];
   private mapInitialized = false;
+  pollingInterval: any = null;
   // Remove isAdmin, newStep, isAddingStep, addTrackingStep
 
   constructor(
@@ -429,6 +432,17 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
     // this.renderLeafletMap(); // Removed as per edit hint
   }
 
+  ngOnInit() {
+    if (this.trackingNumber) {
+      this.trackParcel();
+    }
+    this.pollingInterval = setInterval(() => {
+      if (this.trackingNumber) {
+        this.trackParcel();
+      }
+    }, 10000);
+  }
+
   ngOnDestroy() {
     if (this.leafletMap) {
       this.leafletMap.remove();
@@ -436,6 +450,9 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
     }
     this.leafletPolyline = null;
     this.leafletMarkers = [];
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
   }
 
   async renderMap() {
@@ -450,25 +467,61 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
     if (!originRes.length || !destRes.length) return;
     const originCoords: [number, number] = [parseFloat(originRes[0].lat), parseFloat(originRes[0].lon)];
     const destCoords: [number, number] = [parseFloat(destRes[0].lat), parseFloat(destRes[0].lon)];
+    let currentCoords: [number, number] | null = null;
+    if (this.trackingResult?.currentLat && this.trackingResult?.currentLng) {
+      currentCoords = [this.trackingResult.currentLat, this.trackingResult.currentLng];
+    } else {
+      // Try to use latest step with lat/lng
+      const latestStep = this.trackingResult?.steps?.slice().reverse().find((s: any) => s.lat && s.lng);
+      if (latestStep) {
+        currentCoords = [latestStep.lat, latestStep.lng];
+      }
+    }
     setTimeout(() => {
       if (this.leafletMap) {
         this.leafletMap.remove();
         this.leafletMap = null;
       }
-      // Find latest step with lat/lng
-      const latestStep = this.trackingResult?.steps?.slice().reverse().find((s: any) => s.lat && s.lng);
-      if (latestStep) {
-        const liveCoords: [number, number] = [latestStep.lat, latestStep.lng];
-        this.leafletMap = L.map('liveMap', {
-          center: liveCoords,
-          zoom: 14,
-          zoomControl: false,
-          attributionControl: false,
-        });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-        }).addTo(this.leafletMap);
-        L.marker(liveCoords, {
+      // Center map on current location if available, else origin
+      const mapCenter = currentCoords || originCoords;
+      this.leafletMap = L.map('liveMap', {
+        center: mapCenter,
+        zoom: 8,
+        zoomControl: false,
+        attributionControl: false,
+      });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+      }).addTo(this.leafletMap);
+      // Draw polyline from origin to destination
+      this.leafletPolyline = L.polyline([originCoords, destCoords], { color: '#2563eb', weight: 4 }).addTo(this.leafletMap);
+      // Add markers for origin, destination, and current location
+      L.marker(originCoords, {
+        title: 'Origin',
+        icon: L.icon({
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          shadowSize: [41, 41],
+          shadowAnchor: [12, 41],
+          className: 'origin-marker'
+        })
+      }).addTo(this.leafletMap!);
+      L.marker(destCoords, {
+        title: 'Destination',
+        icon: L.icon({
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          shadowSize: [41, 41],
+          shadowAnchor: [12, 41],
+          className: 'destination-marker'
+        })
+      }).addTo(this.leafletMap!);
+      if (currentCoords) {
+        L.marker(currentCoords, {
           title: 'Current Location',
           icon: L.icon({
             iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -477,45 +530,11 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
             shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
             shadowSize: [41, 41],
             shadowAnchor: [12, 41],
-            className: 'latest-location-marker'
+            className: 'current-location-marker'
           })
         }).addTo(this.leafletMap!);
-      } else {
-        // Fallback: show route from origin to destination
-        this.leafletMap = L.map('liveMap', {
-          center: originCoords,
-          zoom: 6,
-          zoomControl: false,
-          attributionControl: false,
-        });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-        }).addTo(this.leafletMap);
-        this.leafletPolyline = L.polyline([originCoords, destCoords], { color: '#2563eb', weight: 4 }).addTo(this.leafletMap);
-        L.marker(originCoords, {
-          title: 'Origin',
-          icon: L.icon({
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            shadowSize: [41, 41],
-            shadowAnchor: [12, 41]
-          })
-        }).addTo(this.leafletMap!);
-        L.marker(destCoords, {
-          title: 'Destination',
-          icon: L.icon({
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            shadowSize: [41, 41],
-            shadowAnchor: [12, 41]
-          })
-        }).addTo(this.leafletMap!);
-        this.leafletMap.fitBounds(this.leafletPolyline.getBounds(), { padding: [30, 30] });
       }
+      this.leafletMap.fitBounds(this.leafletPolyline.getBounds(), { padding: [30, 30] });
     }, 0);
   }
 
@@ -553,6 +572,8 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
             trackingNumber: res.trackingNumber,
             status: res.status,
             steps,
+            currentLat: res.currentLat,
+            currentLng: res.currentLng,
           };
           this.isLoading = false;
           await this.renderMap();

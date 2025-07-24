@@ -178,4 +178,21 @@ export class EmailService {
       html,
     });
   }
+
+  async sendCourierAssignedEmail(email: string, data: any) {
+    let templatePath = path.join(__dirname, 'templates', 'courier-assigned.hbs');
+    if (!fs.existsSync(templatePath)) {
+      templatePath = path.join(process.cwd(), 'src', 'email', 'templates', 'courier-assigned.hbs');
+    }
+    const source = fs.readFileSync(templatePath, 'utf8');
+    const template = Handlebars.compile(source);
+    const html = template(data);
+    await transporter.sendMail({
+      from: process.env.FROM_EMAIL,
+      to: email,
+      subject: `New Parcel Assigned | Tracking: ${data.trackingNumber}`,
+      text: `You have been assigned a new parcel. Tracking: ${data.trackingNumber}`,
+      html,
+    });
+  }
 }

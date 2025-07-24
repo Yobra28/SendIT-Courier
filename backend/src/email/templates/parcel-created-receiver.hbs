@@ -25,6 +25,13 @@
         <b>Status:</b> {{status}}<br>
         <b>Estimated Delivery:</b> {{estimatedDelivery}}<br>
         <b>Price:</b> ₦{{price}}<br>
+        {{#if courierName}}
+        <hr>
+        <b>Your Courier:</b><br>
+        <b>Name:</b> {{courierName}}<br>
+        <b>Phone:</b> {{courierPhone}}<br>
+        <b>Email:</b> {{courierEmail}}<br>
+        {{/if}}
       </div>
       <a href="https://sendit.example.com/track?tracking={{trackingNumber}}" class="cta-btn">Track Parcel</a>
       <div class="footer">&copy; {{year}} SendIT. All rights reserved.</div>

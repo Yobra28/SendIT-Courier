@@ -14,11 +14,11 @@ export class ParcelService {
   }
 
   getSentParcels() {
-    return this.http.get(`${this.baseUrl}/sent`, { withCredentials: true });
+    return this.http.get(`${this.baseUrl}/sent`);
   }
 
   getReceivedParcels() {
-    return this.http.get(`${this.baseUrl}/received`, { withCredentials: true });
+    return this.http.get(`${this.baseUrl}/received`);
   }
 
   getParcel(id: string) {
@@ -49,6 +49,10 @@ export class ParcelService {
     return this.http.post(`${this.baseUrl}/${parcelId}/steps`, step);
   }
 
+  updateCurrentLocation(parcelId: string, lat: number, lng: number) {
+    return this.http.patch(`${this.baseUrl}/${parcelId}/location`, { lat, lng });
+  }
+
   geocodeAddress(address: string) {
     // Nominatim API (no key required, but rate-limited)
     return this.http.get<any>(
@@ -73,6 +77,6 @@ export class ParcelService {
   }
 
   getUserNotifications() {
-    return this.http.get(`${this.baseUrl}/notifications`, { withCredentials: true });
+    return this.http.get(`${this.baseUrl}/notifications`);
   }
 } 

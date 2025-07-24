@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { ModalComponent } from '../../../shared/components/modal.component';
 import { NavbarComponent } from './navbar.component';
 import { FormsModule } from '@angular/forms';
 import { ParcelService } from '../../../shared/services/parcel.service';
 import { ContactService, ContactPayload } from '../../../shared/services/contact.service';
 import { UserService } from '../../../shared/services/user.service';
+import * as L from 'leaflet';
 
 interface RecentParcel {
   id: string;
@@ -17,6 +18,8 @@ interface RecentParcel {
   trackingNumber: string;
   price: number;
   estimatedDelivery: Date;
+  originCoords?: { lat: number, lng: number };
+  destinationCoords?: { lat: number, lng: number };
 }
 
 @Component({
@@ -251,6 +254,9 @@ export class DashboardComponent implements OnInit {
 
   modalOpen = false;
   selectedParcel: RecentParcel | null = null;
+  mapModalOpen = false;
+  mapInstance: any = null;
+  mapLocation: { lat: number, lng: number } | null = null;
 
   // Modal state for history and support
   historyModalOpen = false;
@@ -267,14 +273,33 @@ export class DashboardComponent implements OnInit {
   };
   supportFormSubmitted = false;
 
+  pollingInterval: any = null;
+
   constructor(
     private router: Router,
     private parcelService: ParcelService,
     private contactService: ContactService,
     private userService: UserService
-  ) {}
+  ) {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.fetchAllData();
+      }
+    });
+  }
 
   ngOnInit(): void {
+    this.fetchAllData();
+    this.pollingInterval = setInterval(() => this.fetchAllData(), 10000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
+  }
+
+  async fetchAllData() {
     this.loadingSent = true;
     this.loadingReceived = true;
     this.errorSent = null;
@@ -293,8 +318,13 @@ export class DashboardComponent implements OnInit {
     });
 
     this.parcelService.getSentParcels().subscribe({
-      next: (res: any) => {
-        this.sentParcels = (res.data || res).map((p: any) => ({
+      next: async (res: any) => {
+        const parcels = (res.data || res);
+        for (const p of parcels) {
+          p.originCoords = await this.geocodeAddressCached(p.origin || p.pickupLocation);
+          p.destinationCoords = await this.geocodeAddressCached(p.destination);
+        }
+        this.sentParcels = parcels.map((p: any) => ({
           id: p.id,
           recipient: p.recipient,
           destination: p.destination,
@@ -303,6 +333,8 @@ export class DashboardComponent implements OnInit {
           trackingNumber: p.trackingNumber,
           price: p.pricing,
           estimatedDelivery: new Date(p.createdAt),
+          originCoords: p.originCoords,
+          destinationCoords: p.destinationCoords,
         }));
         this.loadingSent = false;
         this.updateUserHistory();
@@ -314,8 +346,13 @@ export class DashboardComponent implements OnInit {
     });
 
     this.parcelService.getReceivedParcels().subscribe({
-      next: (res: any) => {
-        this.receivedParcels = (res.data || res).map((p: any) => ({
+      next: async (res: any) => {
+        const parcels = (res.data || res);
+        for (const p of parcels) {
+          p.originCoords = await this.geocodeAddressCached(p.origin || p.pickupLocation);
+          p.destinationCoords = await this.geocodeAddressCached(p.destination);
+        }
+        this.receivedParcels = parcels.map((p: any) => ({
           id: p.id,
           recipient: p.recipient,
           destination: p.destination,
@@ -324,6 +361,8 @@ export class DashboardComponent implements OnInit {
           trackingNumber: p.trackingNumber,
           price: p.pricing,
           estimatedDelivery: new Date(p.createdAt),
+          originCoords: p.originCoords,
+          destinationCoords: p.destinationCoords,
         }));
         this.loadingReceived = false;
         this.updateUserHistory();
@@ -365,19 +404,86 @@ export class DashboardComponent implements OnInit {
     this.userHistory = events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
+  geocodeCache: Record<string, { lat: number, lng: number }> = {};
+  async geocodeAddressCached(address: string): Promise<{ lat: number, lng: number }> {
+    if (!address) return { lat: 0, lng: 0 };
+    if (this.geocodeCache[address]) return this.geocodeCache[address];
+    const res = await this.parcelService.geocodeAddress(address).toPromise();
+    if (res && res.length > 0) {
+      this.geocodeCache[address] = { lat: parseFloat(res[0].lat), lng: parseFloat(res[0].lon) };
+      return this.geocodeCache[address];
+    }
+    return { lat: 0, lng: 0 };
+  }
+
   trackParcel(trackingNumber: string): void {
     // Navigate to track page with pre-filled tracking number
     window.location.href = `/user/track?tracking=${trackingNumber}`;
   }
 
   viewMap(parcelId: string): void {
-    // Open map view for specific parcel
-    alert(`Opening map view for parcel ${parcelId}`);
+    const parcel = this.sentParcels.concat(this.receivedParcels).find(p => p.id === parcelId);
+    if (!parcel) return;
+    this.selectedParcel = parcel;
+    this.mapModalOpen = true;
+    setTimeout(() => this.initMap(), 100);
+  }
+
+  initMap() {
+    if (this.mapInstance) {
+      this.mapInstance.remove();
+    }
+    if (!this.selectedParcel) return;
+    const originLatLng = this.selectedParcel.originCoords || { lat: -1.286389, lng: 36.817223 };
+    const destLatLng = this.selectedParcel.destinationCoords || { lat: 0.3546, lng: 37.5822 };
+    const currentLat = (this.selectedParcel as any)?.currentLat;
+    const currentLng = (this.selectedParcel as any)?.currentLng;
+    const center: [number, number] = (currentLat && currentLng)
+      ? [Number(currentLat), Number(currentLng)]
+      : [Number(originLatLng.lat), Number(originLatLng.lng)];
+    this.mapInstance = L.map('parcelMap').setView(center, 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.mapInstance);
+    L.marker([originLatLng.lat, originLatLng.lng], { icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png', iconSize: [32, 32], iconAnchor: [16, 32] }) })
+      .addTo(this.mapInstance).bindPopup('Origin');
+    L.marker([destLatLng.lat, destLatLng.lng], { icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png', iconSize: [32, 32], iconAnchor: [16, 32] }) })
+      .addTo(this.mapInstance).bindPopup('Destination');
+    if (currentLat && currentLng) {
+      L.marker([currentLat, currentLng], { icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png', iconSize: [32, 32], iconAnchor: [16, 32] }) })
+        .addTo(this.mapInstance).bindPopup('Current Location');
+    }
+    const polylineCoords: [number, number][] = [
+      [Number(originLatLng.lat), Number(originLatLng.lng)],
+      [Number(destLatLng.lat), Number(destLatLng.lng)]
+    ];
+    L.polyline(polylineCoords, { color: '#2563eb', weight: 4, opacity: 0.7 }).addTo(this.mapInstance);
+  }
+
+  closeMapModal() {
+    this.mapModalOpen = false;
+    if (this.mapInstance) {
+      this.mapInstance.remove();
+      this.mapInstance = null;
+    }
   }
 
   downloadReceipt(parcelId: string): void {
-    // Generate and download receipt
-    alert(`Downloading receipt for parcel ${parcelId}`);
+    fetch(`http://localhost:3000/api/parcels/${parcelId}/receipt`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+      .then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receipt-${parcelId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      });
   }
 
   goToParcelDetails(trackingNumber: string): void {

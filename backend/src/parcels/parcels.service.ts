@@ -1,16 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { CreateParcelDto } from './dto/create-parcel.dto';
 import { ParcelStatus } from '@prisma/client';
+import fetch from 'node-fetch';
 
 interface ParcelListOptions {
   page?: number;
@@ -25,30 +26,72 @@ export class ParcelsService {
     private readonly emailService: EmailService,
   ) {}
 
+  async assignCourierToParcel(parcelId: string, courierId: string) {
+    
+    const parcel = await this.prisma.parcel.update({
+      where: { id: parcelId },
+      data: { courierId },
+      include: { sender: true, receiver: true, courier: true },
+    });
+    
+    if (parcel.courier && parcel.receiver) {
+      await this.emailService.sendCourierAssignedEmail(parcel.courier.email, {
+        courierName: parcel.courier.name,
+        trackingNumber: parcel.trackingNumber,
+        pickupLocation: parcel.pickupLocation,
+        destination: parcel.destination,
+        receiverName: parcel.receiver.name,
+        receiverPhone: parcel.receiver.phone,
+        receiverEmail: parcel.receiver.email,
+        year: new Date().getFullYear(),
+      });
+    }
+    return this.toParcelOrder(parcel);
+  }
+
+  async geocodeAddress(address: string): Promise<{ lat: number, lng: number } | null> {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+    try {
+      const results = await fetch(url).then(res => res.json());
+      if (results && results.length > 0) {
+        return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+      }
+    // eslint-disable-next-line no-empty
+    } catch (e) {}
+    return null;
+  }
+
   async create(createParcelDto: CreateParcelDto, adminId: string) {
-    // Generate tracking number and set pricing based on frontend options
     const trackingNumber = 'ST' + Math.random().toString().substr(2, 9);
-    // Accept pricing from DTO, default to 500 (Standard)
     const allowedPricing = [500, 1200, 2000];
     let pricing = Number(createParcelDto.pricing);
     if (!allowedPricing.includes(pricing)) {
       pricing = 500;
     }
+    let currentLat: number | undefined = undefined;
+    let currentLng: number | undefined = undefined;
+    const geo = await this.geocodeAddress(createParcelDto.pickupLocation);
+    if (geo) {
+      currentLat = geo.lat;
+      currentLng = geo.lng;
+    }
     const parcel = await this.prisma.parcel.create({
       data: {
-        senderId: adminId,
+        senderId: createParcelDto.senderId || adminId,
         receiverId: createParcelDto.receiverId,
         pickupLocation: createParcelDto.pickupLocation,
         destination: createParcelDto.destination,
         status: 'PENDING',
         trackingNumber,
         pricing,
+        currentLat,
+        currentLng,
         ...(createParcelDto.courierId ? { courierId: createParcelDto.courierId } : {}),
         ...(createParcelDto.estimatedDelivery ? { estimatedDelivery: createParcelDto.estimatedDelivery } : {}),
       },
-      include: { sender: true, receiver: true },
+      include: { sender: true, receiver: true, courier: true },
     });
-    // Send email to receiver
+    
     await this.emailService.sendParcelCreatedReceiver(parcel.receiver.email, {
       name: parcel.receiver.name,
       trackingNumber: parcel.trackingNumber,
@@ -57,8 +100,13 @@ export class ParcelsService {
       price: parcel.pricing,
       destination: parcel.destination,
       year: new Date().getFullYear(),
+      ...(parcel.courier ? {
+        courierName: parcel.courier.name,
+        courierPhone: parcel.courier.phone,
+        courierEmail: parcel.courier.email,
+      } : {}),
     });
-    // Send email to sender
+   
     await this.emailService.sendParcelCreatedSender(parcel.sender.email, {
       name: parcel.sender.name,
       recipient: parcel.receiver.name,
@@ -66,7 +114,24 @@ export class ParcelsService {
       trackingNumber: parcel.trackingNumber,
       estimatedDelivery: parcel.estimatedDelivery ? new Date(parcel.estimatedDelivery).toLocaleString() : '',
       year: new Date().getFullYear(),
+      ...(parcel.courier ? {
+        courierName: parcel.courier.name,
+        courierPhone: parcel.courier.phone,
+        courierEmail: parcel.courier.email,
+      } : {}),
     });
+    
+    if (createParcelDto.courierId) {
+      await this.prisma.notification.create({
+        data: {
+          userId: createParcelDto.courierId,
+          type: 'assigned',
+          title: 'New Parcel Assigned',
+          message: `You have been assigned a new parcel (${trackingNumber}) by the admin.`,
+          parcelId: parcel.id,
+        },
+      });
+    }
     return this.toParcelOrder(parcel);
   }
 
@@ -101,7 +166,7 @@ export class ParcelsService {
     const page = Number(options.page) > 0 ? Number(options.page) : 1;
     const limit = Number(options.limit) > 0 ? Number(options.limit) : 10;
     const skip = (page - 1) * limit;
-    const where: any = { receiverId: userId, status: 'DELIVERED', deletedAt: null };
+    const where: any = { receiverId: userId, deletedAt: null };
     if (options.search) {
       where.OR = [
         { pickupLocation: { contains: options.search, mode: 'insensitive' } },
@@ -166,6 +231,7 @@ export class ParcelsService {
         parcelId: parcel.id,
       },
     });
+    // Do NOT create a parcel_status notification for the courier here!
     // Create notification for courier (if assigned)
     if (parcel.courierId) {
       await this.prisma.notification.create({
@@ -275,7 +341,15 @@ export class ParcelsService {
     };
   }
 
-  async getUserNotifications(userId: string) {
+  async getUserNotifications(userId: string, userRole?: string) {
+    if (userRole === 'COURIER') {
+      // Only return notifications of type 'assigned' for couriers
+      return this.prisma.notification.findMany({
+        where: { userId, type: 'assigned' },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+    // Default: return all notifications
     return this.prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -287,6 +361,30 @@ export class ParcelsService {
       where: { id },
       include: { receiver: true },
     });
+  }
+
+  async updateCurrentLocation(parcelId: string, lat: number, lng: number) {
+    return this.prisma.parcel.update({
+      where: { id: parcelId },
+      data: { currentLat: lat, currentLng: lng },
+    });
+  }
+
+  async updateParcel(id: string, data: any) {
+    // Only allow updating certain fields
+    const updateData: any = {};
+    if (data.origin || data.pickupLocation) updateData.pickupLocation = data.origin || data.pickupLocation;
+    if (data.destination) updateData.destination = data.destination;
+    if (data.pricing) updateData.pricing = Number(data.pricing);
+    if (data.estimatedDelivery) updateData.estimatedDelivery = data.estimatedDelivery;
+    if (data.courierId) updateData.courierId = data.courierId;
+    // Add more fields as needed
+    const parcel = await this.prisma.parcel.update({
+      where: { id },
+      data: updateData,
+      include: { sender: true, receiver: true, courier: true },
+    });
+    return this.toParcelOrder(parcel);
   }
 
   // Helper to map DB parcel to ParcelOrder shape
@@ -302,6 +400,8 @@ export class ParcelsService {
       trackingNumber: parcel.trackingNumber,
       pricing: parcel.pricing,
       estimatedDelivery: parcel.estimatedDelivery,
+      currentLat: parcel.currentLat ?? null,
+      currentLng: parcel.currentLng ?? null,
     };
   }
 }

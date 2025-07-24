@@ -156,4 +156,25 @@ export class UsersService {
   async findOneRaw(id: string) {
     return this.prisma.user.findUnique({ where: { id } });
   }
+
+  async findByEmail(email: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: { equals: email.trim(), mode: 'insensitive' },
+        deletedAt: null
+      }
+    });
+    if (!user) return null;
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      createdAt: user.createdAt,
+      notifyEmail: user.notifyEmail,
+      notifySms: user.notifySms,
+      notifyPush: user.notifyPush
+    };
+  }
 }

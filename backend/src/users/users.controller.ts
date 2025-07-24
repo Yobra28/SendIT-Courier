@@ -88,6 +88,12 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('by-email/:email')
+  async findByEmail(@Param('email') email: string) {
+    return this.usersService.findByEmail(email);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.usersService.findOne(id);

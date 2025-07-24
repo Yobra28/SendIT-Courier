@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Your Parcel Order is Confirmed!</title>
+    <title>New Parcel Assignment</title>
     <style>
       body { background: #f4f6fb; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
       .container { max-width: 480px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 32px 28px; }
@@ -18,20 +18,17 @@
   <body>
     <div class="container">
       <div class="logo">S</div>
-      <h2>Your Parcel Order is Confirmed!</h2>
-      <p>Hello {{name}},<br>Thank you for trusting <b>SendIT</b>! Your parcel order has been received and will be sent to <b>{{recipient}}</b> at <b>{{destination}}</b>.</p>
+      <h2>New Parcel Assigned</h2>
+      <p>Hello {{courierName}},<br>You have been assigned a new parcel to deliver.</p>
       <div class="details">
         <b>Tracking Number:</b> {{trackingNumber}}<br>
-        <b>Estimated Delivery:</b> {{estimatedDelivery}}<br>
-        {{#if courierName}}
-        <hr>
-        <b>Assigned Courier:</b><br>
-        <b>Name:</b> {{courierName}}<br>
-        <b>Phone:</b> {{courierPhone}}<br>
-        <b>Email:</b> {{courierEmail}}<br>
-        {{/if}}
+        <b>Pickup Location:</b> {{pickupLocation}}<br>
+        <b>Destination:</b> {{destination}}<br>
+        <b>Receiver Name:</b> {{receiverName}}<br>
+        <b>Receiver Phone:</b> {{receiverPhone}}<br>
+        <b>Receiver Email:</b> {{receiverEmail}}<br>
       </div>
-      <a href="https://sendit.example.com/track?tracking={{trackingNumber}}" class="cta-btn">Track Parcel</a>
+      <a href="https://sendit.example.com/track?tracking={{trackingNumber}}" class="cta-btn">View Parcel</a>
       <div class="footer">&copy; {{year}} SendIT. All rights reserved.</div>
     </div>
   </body>

@@ -9,22 +9,22 @@ export class UserService {
   constructor(private http: HttpClient) {}
 
   getProfile(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/me`, { withCredentials: true });
+    return this.http.get(`${this.baseUrl}/me`);
   }
 
   updateProfile(data: any): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/me`, data, { withCredentials: true });
+    return this.http.patch(`${this.baseUrl}/me`, data);
   }
 
   deleteMe(): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/me`, { withCredentials: true });
+    return this.http.delete(`${this.baseUrl}/me`);
   }
 
   setup2FA() {
-    return this.http.post(`${this.baseUrl}/me/2fa/setup`, {}, { withCredentials: true });
+    return this.http.post(`${this.baseUrl}/me/2fa/setup`, {});
   }
 
   verify2FA(code: string) {
-    return this.http.post(`${this.baseUrl}/me/2fa/verify`, { code }, { withCredentials: true });
+    return this.http.post(`${this.baseUrl}/me/2fa/verify`, { code });
   }
 } 

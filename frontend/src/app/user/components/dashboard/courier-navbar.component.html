@@ -1,0 +1,81 @@
+<nav class="user-navbar">
+  <div class="navbar-left">
+    <span class="logo">
+      <span class="material-icons">inventory_2</span>
+      <span class="brand">SendIT</span>
+    </span>
+    <!-- Removed navigation links -->
+  </div>
+  <div class="navbar-right">
+    <button class="icon-btn notification-btn" aria-label="Notifications" (click)="toggleNotifications()">
+      <span class="material-icons">notifications_none</span>
+      <span class="notification-dot" *ngIf="hasUnreadNotifications"></span>
+    </button>
+    <div class="user-dropdown-wrapper">
+      <button class="icon-btn user-btn" aria-label="User Menu" (click)="toggleUserDropdown()">
+        <span class="material-icons">account_circle</span>
+      </button>
+      <div class="user-dropdown" *ngIf="userDropdownOpen">
+        <a class="dropdown-item" (click)="goToDashboard()">My Dashboard</a>
+        <button class="dropdown-item" (click)="openProfile(); userDropdownOpen = false">Profile</button>
+        <button class="dropdown-item logout" (click)="logout(); userDropdownOpen = false">Log out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Modal -->
+  <div class="notification-modal" *ngIf="showNotifications">
+    <div class="modal-header">
+      <span class="modal-title">Notifications</span>
+      <span class="modal-count" *ngIf="notificationUnreadCount > 0">{{ notificationUnreadCount }}</span>
+      <button class="modal-close" (click)="closeNotifications()" aria-label="Close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngFor="let n of notifications" class="notification-item" [ngClass]="{'unread': !n.read}">
+        <span class="notif-icon" [ngClass]="n.type">
+          <span class="material-icons">
+            {{ n.type === 'parcel_status' ? 'inventory_2' : 'notifications' }}
+          </span>
+        </span>
+        <div class="notif-content">
+          <div class="notif-title">{{ n.title }}</div>
+          <div class="notif-message">{{ n.message }}</div>
+          <div class="notif-time" *ngIf="n.createdAt">{{ n.createdAt | date:'short' }}</div>
+        </div>
+        <span class="notif-dot" *ngIf="!n.read"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-action" (click)="markAllRead()">Mark All Read</button>
+      <button class="modal-action close" (click)="closeNotifications()">Close</button>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="profile-modal" *ngIf="showProfileModal">
+    <div class="profile-modal-header">
+      <span class="profile-modal-title"><span class="material-icons">person</span> Profile</span>
+      <button class="modal-close" (click)="closeProfile()" aria-label="Close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="profile-modal-body">
+      <div class="profile-modal-user">
+        <div class="profile-modal-avatar">{{ profileInfo.initials }}</div>
+        <div class="profile-modal-userinfo">
+          <div class="profile-modal-name">{{ profileInfo.name }}</div>
+          <div class="profile-modal-role">{{ profileInfo.role }}</div>
+        </div>
+      </div>
+      <div class="profile-modal-contact">
+        <div><span class="material-icons">mail</span> {{ profileInfo.email }}</div>
+        <div><span class="material-icons">call</span> {{ profileInfo.phone }}</div>
+      </div>
+    </div>
+    <div class="profile-modal-footer">
+      <button type="button" class="modal-action close" (click)="closeProfile()">Close</button>
+    </div>
+  </div>
+</nav> 

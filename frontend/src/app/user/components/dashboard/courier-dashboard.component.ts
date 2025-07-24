@@ -3,89 +3,328 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ParcelService } from '../../../shared/services/parcel.service';
-import { NavbarComponent } from './navbar.component';
+import { CourierNavbarComponent } from './courier-navbar.component';
 
 @Component({
   selector: 'app-courier-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, CourierNavbarComponent],
   template: `
-    <app-user-navbar></app-user-navbar>
-    <div class="courier-dashboard-container">
-      <h1>Courier Dashboard</h1>
-      <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
-      <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
-      <div *ngIf="loading">Loading assigned parcels...</div>
-      <div *ngIf="!loading && parcels.length === 0">No assigned parcels.</div>
-      <div *ngIf="!loading && parcels.length > 0">
-        <table class="parcel-table">
-          <thead>
-            <tr>
-              <th>Tracking #</th>
-              <th>Sender</th>
-              <th>Recipient</th>
-              <th>Origin</th>
-              <th>Destination</th>
-              <th>Status</th>
-              <th>Update</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let parcel of parcels">
-              <td>{{ parcel.trackingNumber }}</td>
-              <td>{{ parcel.sender }}</td>
-              <td>{{ parcel.recipient }}</td>
-              <td>{{ parcel.origin }}</td>
-              <td>{{ parcel.destination }}</td>
-              <td>{{ parcel.status }}</td>
-              <td>
-                <div class="update-controls">
-                  <select [(ngModel)]="parcel.newStatus" class="update-select">
-                    <option value="IN_TRANSIT">In Transit</option>
-                    <option value="DELIVERED">Delivered</option>
-                  </select>
-                  <input type="text" [(ngModel)]="parcel.newLocation" placeholder="Current Location" class="update-input" />
-                  <input type="text" [(ngModel)]="parcel.newLat" placeholder="Latitude" class="update-input" />
-                  <input type="text" [(ngModel)]="parcel.newLng" placeholder="Longitude" class="update-input" />
-                  <div class="update-btns">
-                    <button type="button" class="btn-small btn-geo" (click)="fillCurrentLocation(parcel)">
-                      <span class="material-icons">my_location</span>
-                    </button>
-                    <button class="btn-small btn-update" (click)="updateParcel(parcel)">
-                      <span class="material-icons">check_circle</span>
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <app-courier-navbar></app-courier-navbar>
+    <div class="courier-dashboard-modern">
+      <div class="dashboard-header-modern">
+        <h1>Courier Dashboard</h1>
+        <div class="dashboard-subtitle">Manage your assigned deliveries with ease.</div>
+      </div>
+      <div class="dashboard-content-modern">
+        <div class="dashboard-card-modern">
+          <div class="dashboard-card-header">
+            <span class="material-icons">local_shipping</span>
+            <span>Assigned Parcels</span>
+          </div>
+          <div *ngIf="successMessage" class="success-message-modern">{{ successMessage }}</div>
+          <div *ngIf="errorMessage" class="error-message-modern">{{ errorMessage }}</div>
+          <div *ngIf="loading" class="loading-modern">
+            <span class="material-icons spin">autorenew</span> Loading assigned parcels...
+          </div>
+          <div *ngIf="!loading && parcels.length === 0" class="empty-modern">
+            <span class="material-icons">inbox</span>
+            <div>No assigned parcels.</div>
+          </div>
+          <div *ngIf="!loading && parcels.length > 0" class="table-responsive-modern">
+            <table class="parcel-table-modern">
+              <thead>
+                <tr>
+                  <th>Tracking #</th>
+                  <th>Sender</th>
+                  <th>Recipient</th>
+                  <th>Origin</th>
+                  <th>Destination</th>
+                  <th>Status</th>
+                  <th>Update</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let parcel of parcels">
+                  <td class="tracking-cell">{{ parcel.trackingNumber }}</td>
+                  <td>{{ parcel.sender }}</td>
+                  <td>{{ parcel.recipient }}</td>
+                  <td>{{ parcel.origin }}</td>
+                  <td>{{ parcel.destination }}</td>
+                  <td>
+                    <span class="status-badge-modern status-{{ parcel.status.toLowerCase() }}">
+                      {{ parcel.status.replace('_', ' ') }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="update-controls-modern">
+                      <select [(ngModel)]="parcel.newStatus" class="update-select-modern">
+                        <option value="IN_TRANSIT">In Transit</option>
+                        <option value="DELIVERED">Delivered</option>
+                        <option value="OUT_FOR_PICKUP">Out for Pickup</option>
+                        <option value="CANCELLED">Cancelled</option>
+                      </select>
+                      <input type="text" [(ngModel)]="parcel.newLocation" placeholder="Current Location" class="update-input-modern" />
+                      <input type="text" [(ngModel)]="parcel.newLat" placeholder="Latitude" class="update-input-modern" />
+                      <input type="text" [(ngModel)]="parcel.newLng" placeholder="Longitude" class="update-input-modern" />
+                      <div class="update-btns-modern">
+                        <button type="button" class="btn-small btn-geo-modern" (click)="fillCurrentLocation(parcel)">
+                          <span class="material-icons">my_location</span>
+                        </button>
+                        <button class="btn-small btn-update-modern" (click)="updateParcel(parcel)">
+                          <span class="material-icons">check_circle</span>
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   `,
   styles: [`
-    .courier-dashboard-container { max-width: 1000px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.09); }
-    h1 { color: #4f46e5; margin-bottom: 2rem; font-size: 2.2rem; font-weight: 700; letter-spacing: 1px; }
-    .parcel-table { width: 100%; border-collapse: collapse; font-size: 1rem; }
-    .parcel-table th, .parcel-table td { padding: 0.7rem 0.6rem; border-bottom: 1px solid #e5e7eb; text-align: left; }
-    .parcel-table th { background: #f3f4f6; color: #22223b; font-size: 1.05rem; font-weight: 600; }
-    .parcel-table tr:last-child td { border-bottom: none; }
-    .update-controls { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
-    .update-select { min-width: 110px; font-size: 0.95rem; padding: 0.2rem 0.5rem; border-radius: 6px; border: 1px solid #d1d5db; background: #f9fafb; }
-    .update-input { width: 110px; font-size: 0.95rem; padding: 0.2rem 0.5rem; border-radius: 6px; border: 1px solid #d1d5db; background: #f9fafb; }
-    .update-btns { display: flex; gap: 0.2rem; }
-    .btn-small { display: flex; align-items: center; justify-content: center; padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 1.1rem; border: none; cursor: pointer; transition: background 0.18s; }
-    .btn-geo { background: #e0e7ff; color: #3730a3; }
-    .btn-geo:hover { background: #c7d2fe; }
-    .btn-update { background: #4f46e5; color: #fff; }
-    .btn-update:hover { background: #3730a3; }
-    .material-icons { font-size: 1.2rem; vertical-align: middle; }
-    .success-message { background: #d1fae5; color: #065f46; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; text-align: center; }
-    .error-message { background: #fee2e2; color: #991b1b; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; text-align: center; }
-    @media (max-width: 700px) {
-      .courier-dashboard-container { padding: 0.5rem; }
-      .parcel-table th, .parcel-table td { padding: 0.4rem 0.2rem; font-size: 0.95rem; }
-      .update-input, .update-select { width: 90px; font-size: 0.9rem; }
+    .courier-dashboard-modern {
+      max-width: 1200px;
+      margin: 2.5rem auto;
+      padding: 2rem 1.5rem;
+      background: linear-gradient(120deg, #f8fafc 60%, #e0e7ff 100%);
+      border-radius: 1.5rem;
+      box-shadow: 0 6px 32px rgba(80, 112, 255, 0.08);
+      min-height: 80vh;
+    }
+    .dashboard-header-modern {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .dashboard-header-modern h1 {
+      color: #3730a3;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+    .dashboard-subtitle {
+      color: #6366f1;
+      font-size: 1.15rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+    .dashboard-content-modern {
+      display: flex;
+      justify-content: center;
+    }
+    .dashboard-card-modern {
+      background: #fff;
+      border-radius: 1.2rem;
+      box-shadow: 0 2px 16px rgba(80, 112, 255, 0.07);
+      padding: 2rem 1.5rem;
+      width: 100%;
+      max-width: 1050px;
+    }
+    .dashboard-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #3730a3;
+      margin-bottom: 1.5rem;
+    }
+    .dashboard-card-header .material-icons {
+      font-size: 1.7rem;
+      color: #6366f1;
+    }
+    .success-message-modern {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-weight: 600;
+    }
+    .error-message-modern {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-weight: 600;
+    }
+    .loading-modern {
+      text-align: center;
+      color: #6366f1;
+      font-size: 1.1rem;
+      margin: 2rem 0;
+    }
+    .loading-modern .spin {
+      animation: spin 1.2s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+    .empty-modern {
+      text-align: center;
+      color: #a1a1aa;
+      font-size: 1.1rem;
+      margin: 2.5rem 0;
+    }
+    .empty-modern .material-icons {
+      font-size: 2.5rem;
+      color: #c7d2fe;
+      margin-bottom: 0.5rem;
+    }
+    .table-responsive-modern {
+      overflow-x: auto;
+      margin-top: 1.5rem;
+    }
+    .parcel-table-modern {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: #f9fafb;
+      border-radius: 1rem;
+      box-shadow: 0 1px 4px rgba(80, 112, 255, 0.04);
+      font-size: 1.05rem;
+    }
+    .parcel-table-modern th, .parcel-table-modern td {
+      padding: 1rem 0.7rem;
+      text-align: left;
+    }
+    .parcel-table-modern th {
+      background: #f3f4f6;
+      color: #3730a3;
+      font-weight: 700;
+      font-size: 1.08rem;
+      border-bottom: 2px solid #e0e7ff;
+    }
+    .parcel-table-modern tr:last-child td {
+      border-bottom: none;
+    }
+    .tracking-cell {
+      font-family: monospace;
+      color: #6366f1;
+      font-weight: 600;
+      font-size: 1.08rem;
+    }
+    .status-badge-modern {
+      display: inline-block;
+      padding: 0.35em 1em;
+      border-radius: 1em;
+      font-size: 0.98em;
+      font-weight: 600;
+      background: #e0e7ff;
+      color: #3730a3;
+      text-transform: capitalize;
+      letter-spacing: 0.5px;
+    }
+    .status-badge-modern.status-in_transit {
+      background: #fef9c3;
+      color: #b45309;
+    }
+    .status-badge-modern.status-delivered {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-badge-modern.status-pending {
+      background: #f3f4f6;
+      color: #64748b;
+    }
+    .update-controls-modern {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      align-items: center;
+    }
+    .update-select-modern {
+      min-width: 110px;
+      font-size: 0.98rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 7px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      margin-right: 0.3rem;
+    }
+    .update-input-modern {
+      width: 110px;
+      font-size: 0.98rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 7px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      margin-right: 0.3rem;
+    }
+    .update-btns-modern {
+      display: flex;
+      gap: 0.2rem;
+    }
+    .btn-small {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      font-size: 1.1rem;
+      border: none;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .btn-geo-modern {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .btn-geo-modern:hover {
+      background: #c7d2fe;
+    }
+    .btn-update-modern {
+      background: #6366f1;
+      color: #fff;
+    }
+    .btn-update-modern:hover {
+      background: #3730a3;
+    }
+    .material-icons {
+      font-size: 1.2rem;
+      vertical-align: middle;
+    }
+    @media (max-width: 900px) {
+      .dashboard-card-modern {
+        padding: 1rem 0.3rem;
+      }
+      .parcel-table-modern th, .parcel-table-modern td {
+        padding: 0.7rem 0.3rem;
+        font-size: 0.98rem;
+      }
+      .update-input-modern, .update-select-modern {
+        width: 90px;
+        font-size: 0.95rem;
+      }
+    }
+    @media (max-width: 600px) {
+      .courier-dashboard-modern {
+        padding: 0.5rem 0.1rem;
+      }
+      .dashboard-header-modern h1 {
+        font-size: 1.5rem;
+      }
+      .dashboard-card-modern {
+        padding: 0.5rem 0.1rem;
+      }
+      .parcel-table-modern th, .parcel-table-modern td {
+        padding: 0.4rem 0.1rem;
+        font-size: 0.93rem;
+      }
+      .update-input-modern, .update-select-modern {
+        width: 70px;
+        font-size: 0.9rem;
+      }
     }
   `]
 })
@@ -119,38 +358,27 @@ export class CourierDashboardComponent implements OnInit {
   }
 
   updateParcel(parcel: any) {
-    this.successMessage = '';
-    this.errorMessage = '';
+    if (!parcel.newStatus || !parcel.newLocation || !parcel.newLat || !parcel.newLng) {
+      this.errorMessage = 'Please fill all fields to update.';
+      return;
+    }
+    // First update status, then location
     this.parcelService.updateStatus(parcel.id, parcel.newStatus).subscribe({
       next: () => {
-        // Always call addTrackingStep for debugging
-        console.log('Calling addTrackingStep with:', {
-          status: parcel.newStatus,
-          location: parcel.newLocation,
-          lat: Number(parcel.newLat),
-          lng: Number(parcel.newLng)
-        });
-        this.parcelService.addTrackingStep(parcel.id, {
-          status: parcel.newStatus,
-          location: parcel.newLocation,
-          lat: Number(parcel.newLat),
-          lng: Number(parcel.newLng)
-        }).subscribe({
+        this.parcelService.updateCurrentLocation(parcel.id, parseFloat(parcel.newLat), parseFloat(parcel.newLng)).subscribe({
           next: () => {
-            this.successMessage = 'Parcel status and location updated successfully!';
-            setTimeout(() => { this.successMessage = ''; }, 3000);
-            this.fetchAssignedParcels();
+            this.successMessage = 'Status and location updated!';
+            setTimeout(() => this.successMessage = '', 2000);
           },
-          error: (err) => {
-            this.errorMessage = 'Failed to update location. Please try again.';
-            setTimeout(() => { this.errorMessage = ''; }, 3000);
-            console.error('addTrackingStep error:', err);
+          error: () => {
+            this.errorMessage = 'Failed to update location.';
+            setTimeout(() => this.errorMessage = '', 2000);
           }
         });
       },
       error: () => {
-        this.errorMessage = 'Failed to update status. Please try again.';
-        setTimeout(() => { this.errorMessage = ''; }, 3000);
+        this.errorMessage = 'Failed to update status.';
+        setTimeout(() => this.errorMessage = '', 2000);
       }
     });
   }

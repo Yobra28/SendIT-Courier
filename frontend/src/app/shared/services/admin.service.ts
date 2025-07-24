@@ -40,6 +40,10 @@ export class AdminService {
     return this.http.delete(`${this.apiUrl}/parcels/${id}`, this.getAuthHeaders());
   }
 
+  updateParcel(id: string, data: any): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/parcels/${id}`, data, this.getAuthHeaders());
+  }
+
   getUsers(): Observable<any> {
     return this.http.get(`${this.apiUrl}/users`, this.getAuthHeaders());
   }
@@ -58,5 +62,13 @@ export class AdminService {
 
   updateProfile(data: any): Observable<any> {
     return this.http.patch(`${this.apiUrl}/users/me`, data, this.getAuthHeaders());
+  }
+
+  searchUserByEmail(email: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/users?search=${encodeURIComponent(email)}`, this.getAuthHeaders());
+  }
+
+  getUserByEmail(email: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/users/by-email/${encodeURIComponent(email)}`, this.getAuthHeaders());
   }
 } 

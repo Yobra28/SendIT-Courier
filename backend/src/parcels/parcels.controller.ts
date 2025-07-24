@@ -58,7 +58,7 @@ export class ParcelsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(PrismaRole.ADMIN)
+  @Roles(PrismaRole.ADMIN, PrismaRole.COURIER)
   @Patch(':id/status')
   async updateStatus(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -87,6 +87,36 @@ export class ParcelsController {
     return this.parcelsService.updateAddresses(id, body.pickupLocation, body.destination);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(PrismaRole.ADMIN)
+  @Patch(':id/assign-courier')
+  async assignCourier(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() body: { courierId: string }
+  ) {
+    return this.parcelsService.assignCourierToParcel(id, body.courierId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(PrismaRole.ADMIN, PrismaRole.COURIER)
+  @Patch(':id/location')
+  async updateCurrentLocation(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() body: { lat: number; lng: number }
+  ) {
+    return this.parcelsService.updateCurrentLocation(id, body.lat, body.lng);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(PrismaRole.ADMIN)
+  @Patch(':id')
+  async updateParcel(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() body: any
+  ) {
+    return this.parcelsService.updateParcel(id, body);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async softDelete(@Param('id', new ParseUUIDPipe()) id: string) {
@@ -108,7 +138,7 @@ export class ParcelsController {
   @UseGuards(JwtAuthGuard)
   @Get('notifications')
   async getUserNotifications(@Request() req) {
-    return this.parcelsService.getUserNotifications(req.user.id);
+    return this.parcelsService.getUserNotifications(req.user.id, req.user.role);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,6 +1,4 @@
 <app-user-navbar></app-user-navbar>
-<h2 style="margin-top: 2.5rem; font-size: 2rem; color: #2563eb;">Welcome back!</h2>
-<p style="font-size: 1.15rem; color: #555; margin-bottom: 2.5rem;">Track your packages and manage your deliveries easily.</p>
 <div class="dashboard-wrapper">
   <div class="dashboard-container">
     <div class="dashboard-content">
@@ -70,7 +68,12 @@
               </div>
               <div *ngIf="errorReceived" style="color:#dc2626; text-align:center; margin:2rem 0;">{{ errorReceived }}</div>
               <div *ngIf="!loadingReceived && !errorReceived && receivedParcels.length === 0" style="text-align:center; color:#888; margin:2rem 0;">No received parcels found.</div>
-              <div *ngFor="let parcel of receivedParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer;">
+              <div *ngFor="let parcel of receivedParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer; position:relative;">
+                <ng-container *ngIf="parcel.status && parcel.status.toLowerCase() === 'delivered'">
+                  <span style="position:absolute; top:8px; right:8px; color:#2563eb; font-size:1.5rem; z-index:2;">
+                    <span class="material-icons">done_all</span>
+                  </span>
+                </ng-container>
                 <div class="parcel-info">
                   <div class="parcel-details">
                     <h4>{{ parcel.recipient }}</h4>
@@ -120,7 +123,7 @@
           <div class="quick-actions">
             <button class="action-btn" routerLink="/user/track">
               <span class="material-icons">search</span>
-              <span>Track Parcel</span>
+              Track Parcel
             </button>
             <button class="action-btn" (click)="openHistoryModal()">
               <span class="material-icons">history</span>
@@ -247,4 +250,8 @@
       Close
     </button>
   </ng-template>
+</app-modal> 
+<app-modal [open]="mapModalOpen" (close)="closeMapModal()">
+  <h2 style="margin-bottom: 1rem; color: #2563eb;">Parcel Location</h2>
+  <div id="parcelMap" style="height: 350px; width: 100%; border-radius: 10px; overflow: hidden;"></div>
 </app-modal> 

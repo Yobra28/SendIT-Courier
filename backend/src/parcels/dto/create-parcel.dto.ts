@@ -11,6 +11,10 @@ export class CreateParcelDto {
   @IsOptional()
   courierId?: string;
 
+  @IsUUID()
+  @IsOptional()
+  senderId?: string;
+
   @IsString()
   @IsNotEmpty()
   pickupLocation: string;

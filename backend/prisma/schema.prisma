@@ -23,6 +23,7 @@ enum Role {
 enum ParcelStatus {
   PENDING
   IN_TRANSIT
+  OUT_FOR_PICKUP
   DELIVERED
   CANCELLED
 }
@@ -69,6 +70,8 @@ model Parcel {
   trackingSteps  ParcelTrackingStep[]
   notifications  Notification[]
   estimatedDelivery DateTime?
+  currentLat   Float? // Current latitude for live tracking
+  currentLng   Float? // Current longitude for live tracking
 }
 
 model ParcelTrackingStep {

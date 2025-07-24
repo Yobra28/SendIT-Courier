@@ -9,9 +9,21 @@
       <a href="#features" class="navbar-link">Features</a>
       <a href="#pricing" class="navbar-link">Pricing</a>
       <a href="#contact" class="navbar-link">Contact</a>
+      
+      <!-- User-specific links -->
+      <ng-container *ngIf="userRole === 'USER'">
+        <!-- Removed: <a routerLink="/user/parcels" class="navbar-link">My Parcels</a> -->
+        <!-- Removed: <a routerLink="/user/send" class="navbar-link">Send Parcel</a> -->
+      </ng-container>
+      <!-- Admin-specific links -->
+      <ng-container *ngIf="userRole === 'ADMIN'">
+        <!-- Removed: <a routerLink="/admin/users" class="navbar-link">Manage Users</a> -->
+        <!-- Removed: <a routerLink="/admin/parcels" class="navbar-link">All Parcels</a> -->
+      </ng-container>
     </div>
   </div>
   <div class="navbar-right">
+    <span class="welcome-message" *ngIf="profileInfo.name">Welcome back, {{ profileInfo.name }}</span>
     <button class="icon-btn notification-btn" aria-label="Notifications" (click)="toggleNotifications()">
       <span class="material-icons">notifications_none</span>
       <span class="notification-dot" *ngIf="hasUnreadNotifications"></span>
