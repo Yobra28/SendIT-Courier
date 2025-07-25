@@ -387,6 +387,21 @@ export class ParcelsService {
     return this.toParcelOrder(parcel);
   }
 
+  async getTrackingSteps(parcelId: string) {
+    return this.prisma.parcelTrackingStep.findMany({
+      where: { parcelId },
+      orderBy: { timestamp: 'asc' },
+    });
+  }
+
+  async markAllNotificationsRead(userId: string) {
+    await this.prisma.notification.updateMany({
+      where: { userId, read: false },
+      data: { read: true },
+    });
+    return { success: true };
+  }
+
   // Helper to map DB parcel to ParcelOrder shape
   toParcelOrder(parcel: any) {
     return {

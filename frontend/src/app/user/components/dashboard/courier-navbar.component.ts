@@ -92,8 +92,10 @@ export class CourierNavbarComponent implements OnInit {
   }
 
   markAllRead() {
-    this.notifications.forEach(n => n.read = true);
-    this.fetchNotifications();
+    this.parcelService.markAllNotificationsRead().subscribe({
+      next: () => this.fetchNotifications(),
+      error: () => this.fetchNotifications()
+    });
   }
 
   openProfile() {

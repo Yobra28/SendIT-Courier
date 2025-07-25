@@ -223,7 +223,6 @@ import { CourierNavbarComponent } from './courier-navbar.component';
       background: #e0e7ff;
       color: #3730a3;
       text-transform: capitalize;
-      letter-spacing: 0.5px;
     }
     .status-badge-modern.status-in_transit {
       background: #fef9c3;
@@ -272,9 +271,15 @@ import { CourierNavbarComponent } from './courier-navbar.component';
       padding: 0.2rem 0.5rem;
       border-radius: 5px;
       font-size: 1.1rem;
+      background: #6366f1;
+      color: #fff;
       border: none;
       cursor: pointer;
       transition: background 0.18s;
+    }
+    .btn-small:hover {
+      background: #3730a3;
+      color: #fff;
     }
     .btn-geo-modern {
       background: #e0e7ff;
@@ -295,6 +300,12 @@ import { CourierNavbarComponent } from './courier-navbar.component';
       vertical-align: middle;
     }
     @media (max-width: 900px) {
+      .courier-dashboard-modern {
+        padding: 1rem 0.3rem;
+      }
+      .dashboard-header-modern h1 {
+        font-size: 2rem;
+      }
       .dashboard-card-modern {
         padding: 1rem 0.3rem;
       }
@@ -358,29 +369,57 @@ export class CourierDashboardComponent implements OnInit {
   }
 
   updateParcel(parcel: any) {
-    if (!parcel.newStatus || !parcel.newLocation || !parcel.newLat || !parcel.newLng) {
-      this.errorMessage = 'Please fill all fields to update.';
+    const updateStatus = parcel.newStatus && parcel.newStatus !== parcel.status;
+    const updateLocation = parcel.newLat && parcel.newLng;
+    if (!updateStatus && !updateLocation) {
+      this.errorMessage = 'Please provide at least one field to update.';
+      setTimeout(() => this.errorMessage = '', 2000);
       return;
     }
-    // First update status, then location
-    this.parcelService.updateStatus(parcel.id, parcel.newStatus).subscribe({
-      next: () => {
-        this.parcelService.updateCurrentLocation(parcel.id, parseFloat(parcel.newLat), parseFloat(parcel.newLng)).subscribe({
-          next: () => {
-            this.successMessage = 'Status and location updated!';
-            setTimeout(() => this.successMessage = '', 2000);
-          },
-          error: () => {
-            this.errorMessage = 'Failed to update location.';
-            setTimeout(() => this.errorMessage = '', 2000);
-          }
-        });
-      },
-      error: () => {
-        this.errorMessage = 'Failed to update status.';
-        setTimeout(() => this.errorMessage = '', 2000);
-      }
-    });
+    this.errorMessage = '';
+    this.successMessage = '';
+    if (updateStatus && updateLocation) {
+      this.parcelService.updateStatus(parcel.id, parcel.newStatus).subscribe({
+        next: () => {
+          this.parcelService.updateCurrentLocation(parcel.id, parseFloat(parcel.newLat), parseFloat(parcel.newLng)).subscribe({
+            next: () => {
+              this.successMessage = 'Status and location updated!';
+              setTimeout(() => this.successMessage = '', 2000);
+            },
+            error: () => {
+              this.errorMessage = 'Failed to update location.';
+              setTimeout(() => this.errorMessage = '', 2000);
+            }
+          });
+        },
+        error: () => {
+          this.errorMessage = 'Failed to update status.';
+          setTimeout(() => this.errorMessage = '', 2000);
+        }
+      });
+    } else if (updateStatus) {
+      this.parcelService.updateStatus(parcel.id, parcel.newStatus).subscribe({
+        next: () => {
+          this.successMessage = 'Status updated!';
+          setTimeout(() => this.successMessage = '', 2000);
+        },
+        error: () => {
+          this.errorMessage = 'Failed to update status.';
+          setTimeout(() => this.errorMessage = '', 2000);
+        }
+      });
+    } else if (updateLocation) {
+      this.parcelService.updateCurrentLocation(parcel.id, parseFloat(parcel.newLat), parseFloat(parcel.newLng)).subscribe({
+        next: () => {
+          this.successMessage = 'Location updated!';
+          setTimeout(() => this.successMessage = '', 2000);
+        },
+        error: () => {
+          this.errorMessage = 'Failed to update location.';
+          setTimeout(() => this.errorMessage = '', 2000);
+        }
+      });
+    }
   }
 
   fillCurrentLocation(parcel: any) {
@@ -397,5 +436,16 @@ export class CourierDashboardComponent implements OnInit {
     } else {
       alert('Geolocation is not supported by this browser.');
     }
+  }
+
+  openProfile() {
+    // Optionally, trigger a profile modal or route. For now, just alert.
+    alert('Profile modal is available in the top right menu.');
+  }
+
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
+    window.location.href = '/';
   }
 } 

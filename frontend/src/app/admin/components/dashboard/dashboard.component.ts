@@ -5,6 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AdminService } from '../../../shared/services/admin.service';
 // Remove: import { NgSelectModule } from '@ng-select/ng-select';
+// 1. Add imports for Leaflet and loading state
+import * as L from 'leaflet';
 
 interface AdminStats {
   totalParcels: number;
@@ -393,12 +395,12 @@ interface AdminUser {
                      <span class="material-icons" style="vertical-align: middle; font-size: 1.2em; color: var(--primary-600);">arrow_forward</span>
                      <b>{{ selectedOrder.destination }}</b>
                    </div>
-                   <div style="height: 350px; width: 100%; margin: 0 auto;">
-                     <ng-template #noMap>
-                       <div style="margin-top: 1rem; color: var(--gray-500); font-size: 0.95em;">
-                         (Unable to load map for these addresses)
-                       </div>
-                     </ng-template>
+                   <div style="height: 350px; width: 100%; margin: 0 auto; position: relative;">
+                     <div *ngIf="mapLoading" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                       <span class="material-icons spin">autorenew</span> Loading map...
+                     </div>
+                     <div *ngIf="mapError" style="color: #ef4444; margin-top: 1rem;">{{ mapError }}</div>
+                     <div id="parcelMap" style="height: 100%; width: 100%; border-radius: 10px; overflow: hidden; position: absolute; top: 0; left: 0;"></div>
                    </div>
                  </div>
                  <div class="form-actions">
@@ -559,6 +561,25 @@ interface AdminUser {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+    <div *ngIf="userToDelete" class="modal-backdrop" (click)="cancelUserDelete()">
+      <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <span class="modal-title">Confirm User Deletion</span>
+          <button class="close-btn" (click)="cancelUserDelete()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p style="margin: 0 0 1.2rem 0; font-size: 1rem; color: #444;">
+            Are you sure you want to delete user <b>{{ userToDelete.name }}</b>?
+          </p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline btn-sm" (click)="cancelUserDelete()">Cancel</button>
+          <button class="btn btn-danger btn-sm" (click)="confirmUserDelete()">Delete</button>
+        </div>
       </div>
     </div>
   `,
@@ -1376,7 +1397,7 @@ export class AdminDashboardComponent implements OnInit {
   addUser() { alert('Add user functionality coming soon!'); }
   viewUser(user: AdminUser) { alert('View user: ' + user.name); }
   editUser(user: AdminUser) { alert('Edit user: ' + user.name); }
-  deleteUser(user: AdminUser) { alert('Delete user: ' + user.name); }
+  userToDelete: AdminUser | null = null;
   // Remove senderSearch and recipientSearch
   // Add custom search function for ng-select
   // Remove: customUserSearchFn method
@@ -1466,6 +1487,11 @@ export class AdminDashboardComponent implements OnInit {
       }
     });
   }
+
+  mapInstance: any = null;
+  mapLoading: boolean = false;
+  mapError: string | null = null;
+  mapSteps: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -1583,7 +1609,103 @@ export class AdminDashboardComponent implements OnInit {
         destination: order.destination,
       });
     }
-    // Remove: await this.loadLeafletMap(order.origin, order.destination);
+    if (type === 'map') {
+      this.mapLoading = true;
+      this.mapError = null;
+      this.mapSteps = [];
+      // Remove: setTimeout(() => this.initMap(), 100);
+      if (this.mapInstance) {
+        this.mapInstance.remove();
+        this.mapInstance = null;
+      }
+      try {
+        // 1. Fetch tracking steps for the parcel
+        const steps: any = await this.fetchTrackingSteps(order.id);
+        // 2. Geocode all step locations
+        const geocodedSteps = await Promise.all(steps.map(async (step: any) => {
+          let coords = null;
+          if (step.lat && step.lng) {
+            coords = { lat: step.lat, lng: step.lng };
+          } else if (step.location) {
+            coords = await this.geocodeAddress(step.location);
+          }
+          return { ...step, coords };
+        }));
+        this.mapSteps = geocodedSteps.filter(s => s.coords);
+        setTimeout(() => this.renderMap(), 500); // Increased delay for modal rendering
+      } catch (e) {
+        this.mapError = 'Failed to load tracking steps or map.';
+      } finally {
+        this.mapLoading = false;
+      }
+    }
+  }
+
+  // Fetch tracking steps from backend (try AdminService, fallback to ParcelService)
+  async fetchTrackingSteps(parcelId: string): Promise<any[]> {
+    try {
+      const res: any = await this.adminService.getParcelTrackingSteps(parcelId).toPromise();
+      return res.data || res || [];
+    } catch {
+      // fallback: try ParcelService if needed
+      return [];
+    }
+  }
+
+  // Geocode address to {lat, lng}
+  async geocodeAddress(address: string): Promise<{ lat: number, lng: number } | null> {
+    try {
+      const res: any = await this.http.get<any>(
+        `https://nominatim.openstreetmap.org/search`,
+        { params: { q: address, format: 'json', limit: '1' } }
+      ).toPromise();
+      if (res && res.length > 0) {
+        return { lat: parseFloat(res[0].lat), lng: parseFloat(res[0].lon) };
+      }
+    } catch {}
+    return null;
+  }
+
+  // Render the map with all steps
+  renderMap() {
+    if (this.mapInstance) {
+      this.mapInstance.remove();
+    }
+    if (!this.selectedOrder) return;
+    const origin = this.selectedOrder.origin;
+    const destination = this.selectedOrder.destination;
+    // Geocode origin/destination if not already in steps
+    const allSteps = [
+      { label: 'Origin', location: origin, ...this.mapSteps[0]?.coords ? {} : { coords: null } },
+      ...this.mapSteps,
+      { label: 'Destination', location: destination, ...this.mapSteps[this.mapSteps.length-1]?.coords ? {} : { coords: null } }
+    ];
+    // Remove steps with no coords
+    const coordsSteps = allSteps.filter(s => s.coords);
+    if (coordsSteps.length === 0) return;
+    // Fix: ensure center is a LatLngTuple
+    const center: [number, number] = [coordsSteps[0].coords.lat, coordsSteps[0].coords.lng];
+    this.mapInstance = L.map('parcelMap').setView(center, 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.mapInstance);
+    // Add markers for each step
+    coordsSteps.forEach((step, idx) => {
+      L.marker([step.coords.lat, step.coords.lng], {
+        icon: L.icon({
+          iconUrl: idx === 0 ? 'https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png' : (idx === coordsSteps.length-1 ? 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png' : 'https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png'),
+          iconSize: [32, 32],
+          iconAnchor: [16, 32]
+        })
+      }).addTo(this.mapInstance).bindPopup(step.label || step.status || 'Step');
+    });
+    // Draw polyline
+    const polylineCoords = coordsSteps.map(s => [s.coords.lat, s.coords.lng] as [number, number]);
+    L.polyline(polylineCoords, { color: '#2563eb', weight: 4, opacity: 0.7 }).addTo(this.mapInstance);
+    // Force Leaflet to resize after modal is visible
+    setTimeout(() => {
+      this.mapInstance.invalidateSize();
+    }, 300);
   }
 
   // Remove: async loadLeafletMap(origin: string, destination: string) {
@@ -1762,5 +1884,31 @@ export class AdminDashboardComponent implements OnInit {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  // Show confirmation modal for user deletion
+  deleteUser(user: AdminUser) {
+    this.userToDelete = user;
+  }
+
+  // Cancel user deletion
+  cancelUserDelete() {
+    this.userToDelete = null;
+  }
+
+  // Confirm and delete user
+  confirmUserDelete() {
+    if (!this.userToDelete) return;
+    this.adminService.deleteUser(this.userToDelete.id).subscribe({
+      next: () => {
+        this.loadUsers();
+        this.showSettingsToastMsg('User deleted successfully!');
+        this.userToDelete = null;
+      },
+      error: () => {
+        this.showSettingsToastMsg('Failed to delete user.');
+        this.userToDelete = null;
+      }
+    });
   }
 }

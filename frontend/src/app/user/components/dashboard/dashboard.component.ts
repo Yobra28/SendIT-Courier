@@ -275,6 +275,10 @@ export class DashboardComponent implements OnInit {
 
   pollingInterval: any = null;
 
+  trackingSteps: any[] = [];
+  trackingLoading = false;
+  trackingError: string | null = null;
+
   constructor(
     private router: Router,
     private parcelService: ParcelService,
@@ -421,12 +425,24 @@ export class DashboardComponent implements OnInit {
     window.location.href = `/user/track?tracking=${trackingNumber}`;
   }
 
-  viewMap(parcelId: string): void {
+  async viewMap(parcelId: string): Promise<void> {
     const parcel = this.sentParcels.concat(this.receivedParcels).find(p => p.id === parcelId);
     if (!parcel) return;
     this.selectedParcel = parcel;
-    this.mapModalOpen = true;
-    setTimeout(() => this.initMap(), 100);
+    this.trackingLoading = true;
+    this.trackingError = null;
+    this.trackingSteps = [];
+    try {
+      const steps = await this.parcelService.getTrackingSteps(parcelId).toPromise();
+      this.trackingSteps = Array.isArray(steps) ? steps : [];
+      this.trackingLoading = false;
+      this.mapModalOpen = true;
+      setTimeout(() => this.initMap(), 100);
+    } catch (err) {
+      this.trackingError = 'Failed to load tracking steps.';
+      this.trackingLoading = false;
+      this.mapModalOpen = true;
+    }
   }
 
   initMap() {
@@ -438,9 +454,16 @@ export class DashboardComponent implements OnInit {
     const destLatLng = this.selectedParcel.destinationCoords || { lat: 0.3546, lng: 37.5822 };
     const currentLat = (this.selectedParcel as any)?.currentLat;
     const currentLng = (this.selectedParcel as any)?.currentLng;
-    const center: [number, number] = (currentLat && currentLng)
-      ? [Number(currentLat), Number(currentLng)]
-      : [Number(originLatLng.lat), Number(originLatLng.lng)];
+    let polylineCoords: [number, number][] = [];
+    if (this.trackingSteps && this.trackingSteps.length > 0) {
+      polylineCoords = this.trackingSteps.map((step: any) => [step.lat, step.lng]);
+    } else {
+      polylineCoords = [
+        [Number(originLatLng.lat), Number(originLatLng.lng)],
+        [Number(destLatLng.lat), Number(destLatLng.lng)]
+      ];
+    }
+    const center: [number, number] = polylineCoords.length > 0 ? polylineCoords[polylineCoords.length - 1] : [Number(originLatLng.lat), Number(originLatLng.lng)];
     this.mapInstance = L.map('parcelMap').setView(center, 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -453,11 +476,9 @@ export class DashboardComponent implements OnInit {
       L.marker([currentLat, currentLng], { icon: L.icon({ iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png', iconSize: [32, 32], iconAnchor: [16, 32] }) })
         .addTo(this.mapInstance).bindPopup('Current Location');
     }
-    const polylineCoords: [number, number][] = [
-      [Number(originLatLng.lat), Number(originLatLng.lng)],
-      [Number(destLatLng.lat), Number(destLatLng.lng)]
-    ];
-    L.polyline(polylineCoords, { color: '#2563eb', weight: 4, opacity: 0.7 }).addTo(this.mapInstance);
+    if (polylineCoords.length > 1) {
+      L.polyline(polylineCoords, { color: '#2563eb', weight: 4, opacity: 0.7 }).addTo(this.mapInstance);
+    }
   }
 
   closeMapModal() {

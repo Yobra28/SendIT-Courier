@@ -142,6 +142,19 @@ export class ParcelsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch('notifications/read-all')
+  async markAllNotificationsRead(@Request() req) {
+    return this.parcelsService.markAllNotificationsRead(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(PrismaRole.ADMIN, PrismaRole.COURIER)
+  @Get(':id/steps')
+  async getTrackingSteps(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.parcelsService.getTrackingSteps(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id/receipt')
   async getParcelReceipt(@Param('id') id: string, @Res() res: ExpressResponse) {
     const parcel = await this.parcelsService.getParcelById(id);

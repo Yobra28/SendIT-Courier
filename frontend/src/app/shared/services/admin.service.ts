@@ -71,4 +71,8 @@ export class AdminService {
   getUserByEmail(email: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/users/by-email/${encodeURIComponent(email)}`, this.getAuthHeaders());
   }
+
+  getParcelTrackingSteps(parcelId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/parcels/${parcelId}/steps`, this.getAuthHeaders());
+  }
 } 

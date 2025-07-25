@@ -79,4 +79,12 @@ export class ParcelService {
   getUserNotifications() {
     return this.http.get(`${this.baseUrl}/notifications`);
   }
+
+  markAllNotificationsRead() {
+    return this.http.patch('http://localhost:3000/api/parcels/notifications/read-all', {});
+  }
+
+  getTrackingSteps(parcelId: string) {
+    return this.http.get(`${this.baseUrl}/${parcelId}/steps`);
+  }
 } 

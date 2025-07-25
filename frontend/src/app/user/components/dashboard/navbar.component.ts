@@ -153,10 +153,10 @@ export class NavbarComponent implements OnInit {
   }
 
   markAllRead() {
-    // Optionally, implement mark as read API call here
-    this.notifications.forEach(n => n.read = true);
-    // Optionally, refresh notifications from backend
-    this.fetchNotifications();
+    this.parcelService.markAllNotificationsRead().subscribe({
+      next: () => this.fetchNotifications(),
+      error: () => this.fetchNotifications()
+    });
   }
 
   openSettings() {
