@@ -21,7 +21,7 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles/roles.guard';
 import { Roles } from '../common/decorators/roles/roles.decorator';
-import { Role } from 'generated/prisma';
+import { Role } from '../../generated/prisma';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as speakeasy from 'speakeasy';

@@ -3,9 +3,9 @@ POST http://localhost:3000/auth/register
 Content-Type: application/json
 
 {
-  "name": "Test User",
-  "email": "itsbrian2025@gmail.com",
-  "password": "password123",
+  "name": "Test Admin",
+  "email": "itsbrian2025.com",
+  "password": "123456",
   "phone": "1234567890",
   "role": "ADMIN"
 }
@@ -15,16 +15,37 @@ POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-  "email": "itsbrian2025@gmail.com",
+  "email": "itsbrian2025.com",
   "password": "password123"
-} 
+}
 
-###
-POST http://localhost:3000/api/contact
+### Request password reset code
+POST http://localhost:3000/auth/request-password-reset
 Content-Type: application/json
 
 {
-  "name": "Test",
-  "email": "briankuruui3768@gmail.com",
-  "message": "Hello"
+  "email": "itsbrian2025.com"
+}
+
+### Reset password
+POST http://localhost:3000/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "itsbrian2025.com",
+  "resetCode": "123456",
+  "newPassword": "newpassword123"
+}
+
+### 2FA: Setup (returns secret and QR code URL)
+POST http://localhost:3000/users/me/2fa/setup
+Authorization: Bearer {{token}}
+
+### 2FA: Verify (enable 2FA for user)
+POST http://localhost:3000/users/me/2fa/verify
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "code": "123456"
 }

@@ -198,20 +198,20 @@ export class ParcelsService {
   }
 
   async updateStatus(id: string, status: string) {
-    // Map human-readable status to enum
+   
     const statusMap: Record<string, string> = {
       'Pending': 'PENDING',
       'In Transit': 'IN_TRANSIT',
       'Out for Pickup': 'OUT_FOR_PICKUP',
       'Delivered': 'DELIVERED',
     };
-    const enumStatus = statusMap[status] || status; // fallback if already enum
+    const enumStatus = statusMap[status] || status; 
     const parcel = await this.prisma.parcel.update({
       where: { id },
       data: { status: enumStatus as ParcelStatus },
       include: { sender: true, receiver: true },
     });
-    // Create notification for receiver
+    
     await this.prisma.notification.create({
       data: {
         userId: parcel.receiverId,
@@ -231,7 +231,7 @@ export class ParcelsService {
         parcelId: parcel.id,
       },
     });
-    // Do NOT create a parcel_status notification for the courier here!
+    
     // Create notification for courier (if assigned)
     if (parcel.courierId) {
       await this.prisma.notification.create({
@@ -293,8 +293,8 @@ export class ParcelsService {
     if (!parcel) return { message: 'Parcel not found' };
     return {
       ...this.toParcelOrder(parcel),
-      origin: parcel.pickupLocation, // Ensure always present
-      destination: parcel.destination, // Ensure always present
+      origin: parcel.pickupLocation,
+      destination: parcel.destination,
       steps: parcel.trackingSteps.map((step: any) => ({
         status: step.status,
         description: `Status: ${step.status}`,

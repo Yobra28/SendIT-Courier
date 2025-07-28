@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -120,7 +120,7 @@ import { AuthService } from '../../../shared/services/auth.service';
         </form>
 
         <div class="auth-footer">
-          <p>Already have an account? <a routerLink="/auth/login" class="auth-link">Sign in</a></p>
+          <p>Already have an account? <a (click)="openLogin.emit()" class="auth-link">Sign in</a></p>
         </div>
       </div>
     </div>
@@ -151,7 +151,7 @@ import { AuthService } from '../../../shared/services/auth.service';
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       padding: 2rem;
       width: 100%;
-      max-width: 450px;
+      max-width: 600px;
       animation: slideUp 0.5s ease-out;
     }
 
@@ -231,6 +231,7 @@ export class RegisterComponent {
   registerForm: FormGroup;
   isLoading = false;
   @Input() inModal = false;
+  @Output() openLogin = new EventEmitter<void>();
   registerError = '';
 
   constructor(

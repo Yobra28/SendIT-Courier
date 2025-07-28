@@ -1,0 +1,9 @@
+### Send a contact message
+POST http://localhost:3000/contact
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "testuser@example.com",
+  "message": "Hello, I need help with my parcel."
+} 

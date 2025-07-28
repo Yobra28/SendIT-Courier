@@ -87,11 +87,11 @@ interface MockUser {
           </button>
         </form>
         <div style="text-align:center; margin-bottom:1rem;">
-          <a routerLink="/auth/forgot-password" class="auth-link">Forgot Password?</a>
+          <a (click)="openForgotPassword.emit()" class="auth-link">Forgot Password?</a>
         </div>
 
         <div class="auth-footer">
-          <p>Don't have an account? <a routerLink="/auth/register" class="auth-link">Sign up</a></p>
+          <p>Don't have an account? <a (click)="openRegister.emit()" class="auth-link">Sign up</a></p>
         </div>
       </div>
     </div>
@@ -122,7 +122,7 @@ interface MockUser {
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       padding: 2rem;
       width: 100%;
-      max-width: 500px;
+      max-width: 600px;
       animation: slideUp 0.5s ease-out;
     }
 
@@ -291,6 +291,8 @@ interface MockUser {
 export class LoginComponent {
   @Input() inModal = false;
   @Output() loginSuccess = new EventEmitter<void>();
+  @Output() openRegister = new EventEmitter<void>();
+  @Output() openForgotPassword = new EventEmitter<void>();
 
   loginData = {
     email: '',

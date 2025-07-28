@@ -5,31 +5,53 @@ Authorization: Bearer {{adminToken}}
 
 {
   "receiverId": "{{receiverId}}",
-  "weight": 2.5,
   "pickupLocation": "Warehouse A",
   "destination": "Customer Address"
 }
 
-### Get sent parcels
+### Get sent parcels (for sender)
 GET http://localhost:3000/parcels/sent?page=1&limit=10&search=
 Authorization: Bearer {{token}}
 
-### Get received parcels
+### Get received parcels (for receiver)
 GET http://localhost:3000/parcels/received?page=1&limit=10&search=
 Authorization: Bearer {{token}}
 
-### Update parcel status (admin only)
+### Get all parcels (admin only)
+GET http://localhost:3000/parcels
+Authorization: Bearer {{adminToken}}
+
+### Get parcel by tracking number
+GET http://localhost:3000/parcels/track/{{trackingNumber}}
+Authorization: Bearer {{token}}
+
+### Update parcel status (admin/courier)
 PATCH http://localhost:3000/parcels/{{parcelId}}/status
 Content-Type: application/json
-Authorization: Bearer {{adminToken}}
+Authorization: Bearer {{adminOrCourierToken}}
 
 {
   "status": "DELIVERED"
 }
 
-### Soft delete parcel
-DELETE http://localhost:3000/parcels/{{parcelId}}
-Authorization: Bearer {{token}} 
+### Add tracking step (admin/courier)
+POST http://localhost:3000/parcels/{{parcelId}}/steps
+Content-Type: application/json
+Authorization: Bearer {{adminOrCourierToken}}
+
+{
+  "status": "IN_TRANSIT",
+  "location": "Checkpoint 1"
+}
+
+### Assign courier to parcel (admin only)
+PATCH http://localhost:3000/parcels/{{parcelId}}/assign-courier
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "courierId": "{{courierId}}"
+}
 
 ### Update parcel addresses (admin only)
 PATCH http://localhost:3000/parcels/{{parcelId}}/addresses
@@ -37,6 +59,49 @@ Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "pickupLocation": "Mombasa",
-  "destination": "Nairobi"
-} 
+  "pickupLocation": "New Pickup",
+  "destination": "New Destination"
+}
+
+### Update parcel current location (admin/courier)
+PATCH http://localhost:3000/parcels/{{parcelId}}/location
+Content-Type: application/json
+Authorization: Bearer {{adminOrCourierToken}}
+
+{
+  "lat": 1.234,
+  "lng": 2.345
+}
+
+### Update parcel (admin only)
+PATCH http://localhost:3000/parcels/{{parcelId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "destination": "Updated Destination"
+}
+
+### Soft delete parcel
+DELETE http://localhost:3000/parcels/{{parcelId}}
+Authorization: Bearer {{token}}
+
+### Get assigned parcels (courier only)
+GET http://localhost:3000/parcels/assigned?page=1&limit=10&search=
+Authorization: Bearer {{courierToken}}
+
+### Get user notifications (parcels)
+GET http://localhost:3000/parcels/notifications
+Authorization: Bearer {{token}}
+
+### Mark all notifications as read
+PATCH http://localhost:3000/parcels/notifications/read-all
+Authorization: Bearer {{token}}
+
+### Get tracking steps for a parcel (admin/courier)
+GET http://localhost:3000/parcels/{{parcelId}}/steps
+Authorization: Bearer {{adminOrCourierToken}}
+
+### Get parcel receipt (PDF)
+GET http://localhost:3000/parcels/{{parcelId}}/receipt
+Authorization: Bearer {{token}} 

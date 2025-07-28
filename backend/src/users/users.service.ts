@@ -8,7 +8,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Role } from 'generated/prisma';
+import { Role } from '../../generated/prisma';
 
 interface FindAllOptions {
   page?: number;

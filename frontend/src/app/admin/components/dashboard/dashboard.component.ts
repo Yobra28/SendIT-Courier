@@ -235,28 +235,30 @@ interface AdminUser {
                   </button>
                 </div>
                 <form [formGroup]="parcelForm" (ngSubmit)="createParcel()">
+                  <div *ngIf="createParcelSuccess" class="success-message">{{ createParcelSuccess }}</div>
+                  <div *ngIf="createParcelError" class="error-message">{{ createParcelError }}</div>
                   <div class="form-grid">
                     <div class="form-group">
                       <label for="senderEmail" class="form-label">Sender Email</label>
-                      <input #senderEmailInput type="email" id="senderEmail" class="form-control" placeholder="Enter sender email" (blur)="setSenderByEmail(senderEmailInput.value)" />
+                      <input #senderEmailInput type="email" id="senderEmail" class="form-control" placeholder="Enter sender email" (blur)="setSenderByEmail(senderEmailInput.value)" required />
                       <div *ngIf="senderEmailError" class="text-danger">Sender email not found.</div>
                     </div>
                     <div class="form-group">
                       <label for="recipient" class="form-label">Recipient Email</label>
-                      <input #recipientEmailInput type="email" id="recipient" class="form-control" placeholder="Enter recipient email" (blur)="setRecipientByEmail(recipientEmailInput.value)" />
+                      <input #recipientEmailInput type="email" id="recipient" class="form-control" placeholder="Enter recipient email" (blur)="setRecipientByEmail(recipientEmailInput.value)" required />
                       <div *ngIf="recipientEmailError" class="text-danger">Recipient email not found.</div>
                     </div>
                     <div class="form-group">
                       <label for="origin" class="form-label">Pickup Location</label>
-                      <input type="text" id="origin" class="form-control" placeholder="Enter pickup address" formControlName="origin" />
+                      <input type="text" id="origin" class="form-control" placeholder="Enter pickup address" formControlName="origin" required />
                     </div>
                     <div class="form-group">
                       <label for="destination" class="form-label">Destination</label>
-                      <input type="text" id="destination" class="form-control" placeholder="Enter destination address" formControlName="destination" />
+                      <input type="text" id="destination" class="form-control" placeholder="Enter destination address" formControlName="destination" required />
                     </div>
                     <div class="form-group">
                       <label for="category" class="form-label">Category</label>
-                      <select id="category" class="form-control" formControlName="category">
+                      <select id="category" class="form-control" formControlName="category" required>
                         <option value="">Select category</option>
                         <option value="documents">Documents</option>
                         <option value="electronics">Electronics</option>
@@ -267,7 +269,7 @@ interface AdminUser {
                     </div>
                     <div class="form-group">
                       <label for="pricing" class="form-label">Pricing</label>
-                      <select id="pricing" class="form-control" formControlName="pricing">
+                      <select id="pricing" class="form-control" formControlName="pricing" required>
                         <option [value]="500">Standard (₦500)</option>
                         <option [value]="1200">Express (₦1,200)</option>
                         <option [value]="2000">Overnight (₦2,000)</option>
@@ -282,11 +284,11 @@ interface AdminUser {
                     </div>
                     <div class="form-group">
                       <label for="estimatedDelivery" class="form-label">Estimated Delivery</label>
-                      <input type="datetime-local" id="estimatedDelivery" class="form-control" formControlName="estimatedDelivery" />
+                      <input type="datetime-local" id="estimatedDelivery" class="form-control" formControlName="estimatedDelivery" required />
                     </div>
                   </div>
                   <div class="form-actions">
-                    <button type="button" class="btn btn-outline" (click)="showCreateForm = false">Cancel</button>
+                    <button type="button" class="btn btn-secondary" (click)="showCreateForm = false">Cancel</button>
                     <button type="submit" class="btn btn-primary" [disabled]="!parcelForm.valid || isCreating">
                       <span *ngIf="isCreating" class="spinner"></span>
                       <span *ngIf="!isCreating">Create Order</span>
@@ -295,7 +297,6 @@ interface AdminUser {
                 </form>
               </div>
             </div>
-            <!-- End Create Modal -->
 
             <!-- Edit Modal -->
             <div *ngIf="activeModal === 'edit' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
@@ -346,7 +347,6 @@ interface AdminUser {
                 </form>
               </div>
             </div>
-            <!-- End Edit Modal -->
 
             <!-- View Modal -->
             <div *ngIf="activeModal === 'view' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
@@ -378,43 +378,52 @@ interface AdminUser {
                 </div>
               </div>
             </div>
-            <!-- End View Modal -->
-       
-             <!-- Map Modal -->
-             <div *ngIf="activeModal === 'map' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
-               <div class="modal-content" (click)="$event.stopPropagation()">
-                 <div class="form-header">
-                   <h2>Parcel Route Map</h2>
-                   <button class="close-btn" (click)="closeModal()">
-                     <span class="material-icons">close</span>
-                   </button>
-                 </div>
-                 <div style="padding: 2rem; text-align: center;">
-                   <div style="margin-bottom: 1rem; font-size: 1.1em;">
-                     <b>{{ selectedOrder.origin }}</b>
-                     <span class="material-icons" style="vertical-align: middle; font-size: 1.2em; color: var(--primary-600);">arrow_forward</span>
-                     <b>{{ selectedOrder.destination }}</b>
-                   </div>
-                   <div style="height: 350px; width: 100%; margin: 0 auto; position: relative;">
-                     <div *ngIf="mapLoading" style="display: flex; align-items: center; justify-content: center; height: 100%;">
-                       <span class="material-icons spin">autorenew</span> Loading map...
-                     </div>
-                     <div *ngIf="mapError" style="color: #ef4444; margin-top: 1rem;">{{ mapError }}</div>
-                     <div id="parcelMap" style="height: 100%; width: 100%; border-radius: 10px; overflow: hidden; position: absolute; top: 0; left: 0;"></div>
-                   </div>
-                 </div>
-                 <div class="form-actions">
-                   <button type="button" class="btn btn-outline" (click)="closeModal()">Close</button>
-                 </div>
-               </div>
-             </div>
-             <!-- End Map Modal -->
 
-            <div class="orders-section">
-              <div class="section-header">
-                <h2>Recent Orders</h2>
-                <div class="section-actions">
-                  <button class="btn btn-outline" (click)="exportOrders()">
+            <!-- Map Modal -->
+            <div *ngIf="activeModal === 'map' && selectedOrder" class="modal-backdrop" (click)="closeModal()">
+              <div class="modal-content" (click)="$event.stopPropagation()">
+                <div class="form-header">
+                  <h2>Parcel Route Map</h2>
+                  <button class="close-btn" (click)="closeModal()">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+                <div style="padding: 2rem; text-align: center;">
+                  <div style="margin-bottom: 1rem; font-size: 1.1em;">
+                    <b>{{ selectedOrder.origin }}</b>
+                    <span class="material-icons" style="vertical-align: middle; font-size: 1.2em; color: var(--primary-600);">arrow_forward</span>
+                    <b>{{ selectedOrder.destination }}</b>
+                  </div>
+                  <div style="height: 350px; width: 100%; margin: 0 auto; position: relative;">
+                    <div *ngIf="mapLoading" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                      <span class="material-icons spin">autorenew</span> Loading map...
+                    </div>
+                    <div *ngIf="mapError" style="color: #ef4444; margin-top: 1rem;">{{ mapError }}</div>
+                    <div id="parcelMap-{{selectedOrder.id}}" style="height: 350px; width: 100%; border-radius: 10px; overflow: hidden; position: absolute; top: 0; left: 0;"></div>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn btn-outline" (click)="closeModal()">Close</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Package Search and Table -->
+            <div class="table-section">
+              <div class="table-header-row">
+                <h3>Recent Orders</h3>
+                <div class="table-actions">
+                  <div class="search-container">
+                    <span class="material-icons search-icon">search</span>
+                    <input 
+                      type="text" 
+                      placeholder="Search by sender, recipient, or tracking number..." 
+                      [(ngModel)]="packageSearchTerm"
+                      (input)="onPackageSearchChange()"
+                      class="search-input"
+                    />
+                  </div>
+                  <button class="btn btn-secondary" (click)="exportOrders()">
                     <span class="material-icons">download</span>
                     Export
                   </button>
@@ -430,7 +439,7 @@ interface AdminUser {
                   <div class="table-cell">Pricing</div>
                   <div class="table-cell">Actions</div>
                 </div>
-                <div class="table-row" *ngFor="let order of recentOrders">
+                <div class="table-row" *ngFor="let order of filteredOrders">
                   <div class="table-cell">
                     <span class="tracking-number">{{ order.trackingNumber }}</span>
                   </div>
@@ -475,6 +484,18 @@ interface AdminUser {
             <div class="user-management">
               <div class="user-header">
                 <h2>User Management</h2>
+                <div class="user-actions">
+                  <div class="search-container">
+                    <span class="material-icons search-icon">search</span>
+                    <input 
+                      type="text" 
+                      placeholder="Search by email or name..." 
+                      [(ngModel)]="userSearchTerm"
+                      (input)="onUserSearchChange()"
+                      class="search-input"
+                    />
+                  </div>
+                </div>
               </div>
               <div class="users-table">
                 <div class="table-header">
@@ -486,7 +507,7 @@ interface AdminUser {
                   <div class="table-cell">Join Date</div>
                   <div class="table-cell">Actions</div>
                 </div>
-                <div class="table-row" *ngFor="let user of users">
+                <div class="table-row" *ngFor="let user of filteredUsers">
                   <div class="table-cell">{{ user.name }}</div>
                   <div class="table-cell">{{ user.email }}</div>
                   <div class="table-cell">{{ user.phone }}</div>
@@ -1056,17 +1077,32 @@ interface AdminUser {
       overflow-x: auto;
     }
 
-    .table-header {
+    .table-header, .table-row {
       display: grid;
       grid-template-columns: 150px 150px 150px 200px 120px 120px 120px;
       gap: 1rem;
       padding: 1rem 1.5rem;
-      background: var(--gray-100);
-      border-bottom: 1px solid var(--gray-200);
-      font-weight: 500;
-      color: var(--gray-700);
+      align-items: center;
     }
 
+    @media (max-width: 900px) {
+      .table-header, .table-row {
+        grid-template-columns: 120px 120px 120px 150px 100px 100px 120px;
+        font-size: 0.9rem;
+        padding: 0.7rem 0.5rem;
+      }
+    }
+    @media (max-width: 600px) {
+      .table-header, .table-row {
+        grid-template-columns: 100px 100px 100px 120px 80px 80px 120px;
+        font-size: 0.8rem;
+        padding: 0.5rem 0.2rem;
+      }
+      .action-buttons {
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+    }
     .table-row {
       display: grid;
       grid-template-columns: 150px 150px 150px 200px 120px 120px 120px;
@@ -1110,21 +1146,27 @@ interface AdminUser {
     .action-buttons {
       display: flex;
       gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .action-btn {
-      background: none;
-      border: 1px solid var(--gray-300);
-      color: var(--gray-600);
-      padding: 0.5rem;
-      border-radius: 0.5rem;
+      background: #f3f4f6;
+      border: none;
+      border-radius: 6px;
+      padding: 0.4rem 0.5rem;
+      font-size: 1.1rem;
+      color: #22223b;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: background 0.13s, color 0.13s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .action-btn:hover {
-      background: var(--gray-100);
-      color: var(--gray-800);
+      background: #ede9fe;
+      color: #2563eb;
     }
 
     /* Modal Styles */
@@ -1364,6 +1406,118 @@ interface AdminUser {
       align-items: center;
       justify-content: center;
     }
+    .orders-table {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      margin-top: 1rem;
+    }
+
+    .table-section {
+      margin-top: 2rem;
+    }
+
+    .table-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .table-header-row h3 {
+      margin: 0;
+      color: var(--gray-800);
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--gray-500);
+      font-size: 1.2rem;
+    }
+
+    .search-input {
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      width: 300px;
+      background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary-500);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .search-input::placeholder {
+      color: var(--gray-500);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 1.2em;
+      height: 1.2em;
+      border: 2px solid #fff;
+      border-top: 2px solid #6366f1;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5em;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .success-message {
+      color: #16a34a;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .error-message {
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .modal-content .leaflet-container, #parcelMap {
+      min-height: 350px;
+      height: 350px !important;
+      width: 100% !important;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0 auto;
+    }
   `]
 })
 export class AdminDashboardComponent implements OnInit {
@@ -1394,6 +1548,13 @@ export class AdminDashboardComponent implements OnInit {
   activeTab: 'packages' | 'users' = 'packages';
   users: AdminUser[] = [];
   couriers: any[] = [];
+  
+  // Search functionality
+  packageSearchTerm: string = '';
+  userSearchTerm: string = '';
+  filteredOrders: ParcelOrder[] = [];
+  filteredUsers: AdminUser[] = [];
+
   addUser() { alert('Add user functionality coming soon!'); }
   viewUser(user: AdminUser) { alert('View user: ' + user.name); }
   editUser(user: AdminUser) { alert('Edit user: ' + user.name); }
@@ -1500,13 +1661,12 @@ export class AdminDashboardComponent implements OnInit {
     private adminService: AdminService
   ) {
     this.parcelForm = this.fb.group({
-      // sender: ['', Validators.required], // Remove sender from payload
       recipient: ['', Validators.required], // user ID (from email lookup)
-      origin: ['', Validators.required], // pickupLocation
+      origin: ['', Validators.required],
       destination: ['', Validators.required],
-      category: ['', [Validators.required]], // keep for UI, not sent to backend
-      pricing: [500, [Validators.required]],
-      courierId: [''], // Add courierId field
+      category: ['', Validators.required],
+      pricing: [500, Validators.required],
+      courierId: [''],
       estimatedDelivery: ['', Validators.required],
     });
     this.editForm = this.fb.group({
@@ -1550,49 +1710,95 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadParcels() {
-    this.adminService.getParcels().subscribe(res => {
-      this.recentOrders = res.data || res;
+    this.adminService.getParcels().subscribe({
+      next: (parcels) => {
+        this.recentOrders = parcels;
+        this.filteredOrders = [...parcels]; // Initialize filtered orders
+      },
+      error: (error) => console.error('Error loading parcels:', error)
     });
   }
 
   loadUsers() {
     this.adminService.getUsers().subscribe(res => {
-      this.users = res.data || res;
+      this.users = res.data || [];
+      this.filteredUsers = [...this.users];
     });
   }
 
-  createParcel(): void {
-    if (this.parcelForm.invalid) return;
-    this.isCreating = true;
-    const formValue = this.parcelForm.value;
-    // Use selectedSender from API lookup
-    if (!this.selectedSender) {
-      this.isCreating = false;
-      this.senderEmailError = true;
+  createParcelSuccess: string = '';
+  createParcelError: string = '';
+
+  async createParcel(): Promise<void> {
+    console.log('createParcel called');
+    if (this.parcelForm.invalid) {
+      console.log('Form is invalid', this.parcelForm.value, this.parcelForm.errors);
       return;
     }
+    this.isCreating = true;
+    this.createParcelSuccess = 'Parcel created successfully! 🎉';
+    this.createParcelError = '';
+    const formValue = this.parcelForm.value;
+    // If selectedSender is not set, try to look up by email
+    if (!this.selectedSender) {
+      const senderEmailInput = (document.getElementById('senderEmail') as HTMLInputElement)?.value;
+      if (senderEmailInput) {
+        try {
+          const user = await this.adminService.getUserByEmail(senderEmailInput.trim()).toPromise();
+          if (user && user.id) {
+            this.selectedSender = user;
+            this.senderEmailError = false;
+          } else {
+            this.isCreating = false;
+            this.senderEmailError = true;
+            this.createParcelError = 'Sender not found.';
+            console.log('Sender not found');
+            return;
+          }
+        } catch {
+          this.isCreating = false;
+          this.senderEmailError = true;
+          this.createParcelError = 'Sender not found.';
+          console.log('Sender not found (exception)');
+          return;
+        }
+      } else {
+        this.isCreating = false;
+        this.senderEmailError = true;
+        this.createParcelError = 'Sender email is required.';
+        console.log('Sender email is required');
+        return;
+      }
+    }
     const payload: any = {
-      senderId: this.selectedSender.id, // Use the selected sender's user ID
+      senderId: this.selectedSender.id,
       receiverId: formValue.recipient,
       pickupLocation: formValue.origin,
       destination: formValue.destination,
+      category: formValue.category,
       pricing: parseInt(formValue.pricing, 10),
       courierId: formValue.courierId || undefined,
       estimatedDelivery: formValue.estimatedDelivery ? new Date(formValue.estimatedDelivery).toISOString() : undefined
     };
+    console.log('Submitting payload to backend:', payload);
     this.adminService.createParcel(payload).subscribe({
       next: () => {
         this.isCreating = false;
-        this.showCreateForm = false;
-        this.parcelForm.reset();
-        this.selectedSender = null;
+        this.createParcelSuccess = 'Parcel created successfully! 🎉';
+        this.createParcelError = '';
+        setTimeout(() => {
+          this.showCreateForm = false;
+          this.parcelForm.reset();
+          this.selectedSender = null;
+          this.createParcelSuccess = '';
+        }, 1200);
         this.loadParcels();
         this.loadStats();
-        this.showSettingsToastMsg('Parcel created successfully!');
       },
       error: () => {
         this.isCreating = false;
-        this.showSettingsToastMsg('Failed to create parcel.');
+        this.createParcelError = 'Failed to create parcel. Please check all fields and try again.';
+        console.log('API call failed');
       }
     });
   }
@@ -1668,86 +1874,34 @@ export class AdminDashboardComponent implements OnInit {
 
   // Render the map with all steps
   renderMap() {
+    if (!this.mapSteps.length || !this.selectedOrder) return;
+    const mapId = `parcelMap-${this.selectedOrder.id}`;
+    // Destroy previous map instance if exists
     if (this.mapInstance) {
       this.mapInstance.remove();
+      this.mapInstance = null;
     }
-    if (!this.selectedOrder) return;
-    const origin = this.selectedOrder.origin;
-    const destination = this.selectedOrder.destination;
-    // Geocode origin/destination if not already in steps
-    const allSteps = [
-      { label: 'Origin', location: origin, ...this.mapSteps[0]?.coords ? {} : { coords: null } },
-      ...this.mapSteps,
-      { label: 'Destination', location: destination, ...this.mapSteps[this.mapSteps.length-1]?.coords ? {} : { coords: null } }
-    ];
-    // Remove steps with no coords
-    const coordsSteps = allSteps.filter(s => s.coords);
-    if (coordsSteps.length === 0) return;
-    // Fix: ensure center is a LatLngTuple
-    const center: [number, number] = [coordsSteps[0].coords.lat, coordsSteps[0].coords.lng];
-    this.mapInstance = L.map('parcelMap').setView(center, 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(this.mapInstance);
-    // Add markers for each step
-    coordsSteps.forEach((step, idx) => {
-      L.marker([step.coords.lat, step.coords.lng], {
-        icon: L.icon({
-          iconUrl: idx === 0 ? 'https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png' : (idx === coordsSteps.length-1 ? 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png' : 'https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png'),
-          iconSize: [32, 32],
-          iconAnchor: [16, 32]
-        })
-      }).addTo(this.mapInstance).bindPopup(step.label || step.status || 'Step');
-    });
-    // Draw polyline
-    const polylineCoords = coordsSteps.map(s => [s.coords.lat, s.coords.lng] as [number, number]);
-    L.polyline(polylineCoords, { color: '#2563eb', weight: 4, opacity: 0.7 }).addTo(this.mapInstance);
-    // Force Leaflet to resize after modal is visible
     setTimeout(() => {
-      this.mapInstance.invalidateSize();
-    }, 300);
+      const firstStep = this.mapSteps[0];
+      const map = L.map(mapId).setView([firstStep.coords.lat, firstStep.coords.lng], 7);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+      this.mapSteps.forEach((step: any) => {
+        if (step.coords) {
+          L.marker([step.coords.lat, step.coords.lng]).addTo(map)
+            .bindPopup(step.status + '<br>' + step.location);
+        }
+      });
+      if (this.mapSteps.length > 1) {
+        const latlngs = this.mapSteps.map((s: any) => s.coords && [s.coords.lat, s.coords.lng]).filter(Boolean);
+        L.polyline(latlngs, { color: 'blue' }).addTo(map);
+      }
+      map.invalidateSize();
+      this.mapInstance = map;
+    }, 350);
   }
-
-  // Remove: async loadLeafletMap(origin: string, destination: string) {
-  // Remove:   const [originLoc, destLoc] = await Promise.all([
-  // Remove:     this.nominatimGeocode(origin),
-  // Remove:     this.nominatimGeocode(destination)
-  // Remove:   ]);
-  // Remove:   if (originLoc && destLoc) {
-  // Remove:     this.leafletOptions = {
-  // Remove:       ...this.leafletOptions,
-  // Remove:       center: L.latLng(originLoc.lat, originLoc.lon),
-  // Remove:       zoom: 7
-  // Remove:     };
-  // Remove:     this.leafletMarkers = [
-  // Remove:       L.marker([originLoc.lat, originLoc.lon], { icon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] }) }).bindPopup('Origin'),
-  // Remove:       L.marker([destLoc.lat, destLoc.lon], { icon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] }) }).bindPopup('Destination')
-  // Remove:     ];
-  // Remove:     this.leafletPolyline = L.polyline([
-  // Remove:       [originLoc.lat, originLoc.lon],
-  // Remove:       [destLoc.lat, destLoc.lon]
-  // Remove:     ], { color: 'blue' });
-  // Remove:     this.leafletFitBounds = L.latLngBounds([
-  // Remove:       [originLoc.lat, originLoc.lon],
-  // Remove:       [destLoc.lat, destLoc.lon]
-  // Remove:     ]);
-  // Remove:   } else {
-  // Remove:     this.leafletMarkers = [];
-  // Remove:     this.leafletPolyline = null;
-  // Remove:     this.leafletFitBounds = null;
-  // Remove:   }
-  // Remove: }
-
-  // Remove: async nominatimGeocode(address: string): Promise<{ lat: number, lon: number } | null> {
-  // Remove:   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-  // Remove:   try {
-  // Remove:     const results = await fetch(url).then(res => res.json());
-  // Remove:     if (results && results.length > 0) {
-  // Remove:       return { lat: parseFloat(results[0].lat), lon: parseFloat(results[0].lon) };
-  // Remove:     }
-  // Remove:   } catch (e) {}
-  // Remove:   return null;
-  // Remove: }
 
   saveEdit() {
     if (this.editForm.valid && this.selectedOrder) {
@@ -1788,12 +1942,6 @@ export class AdminDashboardComponent implements OnInit {
     navigator.clipboard.writeText(tracking);
     this.showSettingsToastMsg('Tracking number copied!');
   }
-
-  // Remove: get leafletLayers(): L.Layer[] {
-  // Remove:   const layers: L.Layer[] = [...this.leafletMarkers];
-  // Remove:   if (this.leafletPolyline) layers.push(this.leafletPolyline);
-  // Remove:   return layers;
-  // Remove: }
 
   openSettings() {
     this.settingsModalOpen = true;
@@ -1910,5 +2058,39 @@ export class AdminDashboardComponent implements OnInit {
         this.userToDelete = null;
       }
     });
+  }
+
+  // Search methods
+  filterPackages() {
+    if (!this.packageSearchTerm.trim()) {
+      this.filteredOrders = [...this.recentOrders];
+    } else {
+      const searchTerm = this.packageSearchTerm.toLowerCase();
+      this.filteredOrders = this.recentOrders.filter(order => 
+        order.sender.toLowerCase().includes(searchTerm) ||
+        order.recipient.toLowerCase().includes(searchTerm) ||
+        order.trackingNumber.toLowerCase().includes(searchTerm)
+      );
+    }
+  }
+
+  filterUsers() {
+    if (!this.userSearchTerm.trim()) {
+      this.filteredUsers = [...this.users];
+    } else {
+      const searchTerm = this.userSearchTerm.toLowerCase();
+      this.filteredUsers = this.users.filter(user => 
+        user.email.toLowerCase().includes(searchTerm) ||
+        user.name.toLowerCase().includes(searchTerm)
+      );
+    }
+  }
+
+  onPackageSearchChange() {
+    this.filterPackages();
+  }
+
+  onUserSearchChange() {
+    this.filterUsers();
   }
 }

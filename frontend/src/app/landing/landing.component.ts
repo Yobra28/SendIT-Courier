@@ -7,11 +7,12 @@ import { RegisterComponent } from '../auth/components/register/register.componen
 import { ContactService } from '../shared/services/contact.service';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../user/components/dashboard/navbar.component';
+import { ForgotPasswordComponent } from '../auth/components/forgot-password.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterModule, ModalComponent, LoginComponent, RegisterComponent, FormsModule, NavbarComponent],
+  imports: [CommonModule, RouterModule, ModalComponent, LoginComponent, RegisterComponent, ForgotPasswordComponent, FormsModule, NavbarComponent],
   template: `
     <div class="landing-container">
       <ng-container *ngIf="isLoggedIn(); else guestNav">
@@ -274,10 +275,10 @@ import { NavbarComponent } from '../user/components/dashboard/navbar.component';
             <h2>Ready to Start Shipping?</h2>
             <p>Join thousands of satisfied customers who trust SendIT for their delivery needs.</p>
             <div class="cta-actions">
-              <button class="btn btn-primary btn-large" routerLink="/auth/register">
+              <button class="btn btn-primary btn-large" (click)="openRegisterModal()">
                 Create Account
               </button>
-              <button class="btn btn-outline btn-large" routerLink="/auth/login">
+              <button class="btn btn-outline btn-large" (click)="openLoginModal()">
                 Sign In
               </button>
             </div>
@@ -287,11 +288,15 @@ import { NavbarComponent } from '../user/components/dashboard/navbar.component';
 
       <!-- Login Modal -->
       <app-modal [open]="showLoginModal" (close)="closeModals()">
-        <app-login [inModal]="true" (loginSuccess)="handleLoginSuccess()"></app-login>
+        <app-login [inModal]="true" (loginSuccess)="handleLoginSuccess()" (openRegister)="openRegisterModal()" (openForgotPassword)="openForgotPasswordModal()"></app-login>
       </app-modal>
       <!-- Register Modal -->
       <app-modal [open]="showRegisterModal" (close)="closeModals()">
-        <app-register [inModal]="true"></app-register>
+        <app-register [inModal]="true" (openLogin)="openLoginModal()"></app-register>
+      </app-modal>
+      <!-- Forgot Password Modal -->
+      <app-modal [open]="showForgotPasswordModal" (close)="closeModals()">
+        <app-forgot-password [inModal]="true" (openLogin)="openLoginModal()"></app-forgot-password>
       </app-modal>
 
       <footer class="landing-footer">
@@ -1204,18 +1209,27 @@ export class LandingComponent {
 
   showLoginModal = false;
   showRegisterModal = false;
+  showForgotPasswordModal = false;
 
   openLoginModal() {
     this.showLoginModal = true;
     this.showRegisterModal = false;
+    this.showForgotPasswordModal = false;
   }
   openRegisterModal() {
     this.showRegisterModal = true;
     this.showLoginModal = false;
+    this.showForgotPasswordModal = false;
+  }
+  openForgotPasswordModal() {
+    this.showForgotPasswordModal = true;
+    this.showLoginModal = false;
+    this.showRegisterModal = false;
   }
   closeModals() {
     this.showLoginModal = false;
     this.showRegisterModal = false;
+    this.showForgotPasswordModal = false;
   }
 
   toggleFaq(index: number) {

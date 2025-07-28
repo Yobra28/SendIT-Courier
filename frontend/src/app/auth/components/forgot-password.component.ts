@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,7 +9,7 @@ import { AuthService } from '../../shared/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="auth-container">
+    <div class="auth-container" [ngClass]="{'modal-bg': inModal}">
       <div class="auth-card">
         <div class="auth-header">
           <div class="logo">
@@ -18,7 +18,7 @@ import { AuthService } from '../../shared/services/auth.service';
           </div>
           <p class="auth-subtitle">Forgot your password?</p>
         </div>
-        <form class="auth-form" (ngSubmit)="onSubmit()">
+        <form *ngIf="step === 'request'" class="auth-form" (ngSubmit)="onSubmitRequest()">
           <div class="form-group">
             <label for="email" class="form-label">Email Address</label>
             <input
@@ -37,7 +37,54 @@ import { AuthService } from '../../shared/services/auth.service';
             <span *ngIf="!isLoading">Send Reset Code</span>
           </button>
         </form>
-        <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+        <form *ngIf="step === 'reset'" class="auth-form" (ngSubmit)="onSubmitReset()">
+          <div class="form-group">
+            <label for="code" class="form-label">Reset Code</label>
+            <input
+              type="text"
+              id="code"
+              name="code"
+              class="form-control"
+              placeholder="Enter the 6-digit code"
+              [(ngModel)]="code"
+              required
+              maxlength="6"
+              minlength="6"
+            />
+          </div>
+          <div class="form-group">
+            <label for="newPassword" class="form-label">New Password</label>
+            <input
+              type="password"
+              id="newPassword"
+              name="newPassword"
+              class="form-control"
+              placeholder="Enter new password"
+              [(ngModel)]="newPassword"
+              required
+              minlength="6"
+            />
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword" class="form-label">Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              class="form-control"
+              placeholder="Confirm new password"
+              [(ngModel)]="confirmPassword"
+              required
+              minlength="6"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" [disabled]="isLoading || !canSubmitReset()">
+            <span *ngIf="isLoading" class="spinner"></span>
+            <span *ngIf="!isLoading">Reset Password</span>
+          </button>
+        </form>
+        <div *ngIf="step === 'done'" class="success-message">{{ successMessage }}</div>
+        <div *ngIf="successMessage && step !== 'done'" class="success-message">{{ successMessage }}</div>
         <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
         <div class="auth-footer">
           <a routerLink="/auth/login" class="auth-link">Back to Login</a>
@@ -63,14 +110,24 @@ import { AuthService } from '../../shared/services/auth.service';
   `]
 })
 export class ForgotPasswordComponent {
+  @Input() inModal = false;
+  @Output() openLogin = new EventEmitter<void>();
+  // Step control
+  step: 'request' | 'reset' | 'done' = 'request';
+  // Request code fields
   email = '';
+  // Reset fields
+  code = '';
+  newPassword = '';
+  confirmPassword = '';
   isLoading = false;
   successMessage = '';
   errorMessage = '';
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  onSubmit() {
+  // Step 1: Request reset code
+  onSubmitRequest() {
     if (!this.email) return;
     this.isLoading = true;
     this.successMessage = '';
@@ -80,12 +137,39 @@ export class ForgotPasswordComponent {
         this.isLoading = false;
         this.successMessage = 'A reset code has been sent to your email.';
         setTimeout(() => {
-          this.router.navigate(['/auth/reset-password'], { queryParams: { email: this.email } });
+          this.successMessage = '';
+          this.step = 'reset';
         }, 1200);
       },
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.error?.message || 'Failed to send reset code.';
+      }
+    });
+  }
+
+  // Step 2: Reset password
+  canSubmitReset() {
+    return this.code.length === 6 && this.newPassword.length >= 6 && this.newPassword === this.confirmPassword;
+  }
+
+  onSubmitReset() {
+    if (!this.canSubmitReset()) return;
+    this.isLoading = true;
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.authService.resetPassword({ token: this.code, newPassword: this.newPassword }).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.successMessage = 'Password has been reset. You can now log in.';
+        this.step = 'done';
+        setTimeout(() => {
+          this.openLogin.emit();
+        }, 1200);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = err.error?.message || 'Failed to reset password.';
       }
     });
   }

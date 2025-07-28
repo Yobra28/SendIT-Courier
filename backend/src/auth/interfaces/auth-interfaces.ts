@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Role } from 'generated/prisma';
+import { Role } from '../../../generated/prisma';
 
 
 export interface RegisterDtoInterface {
