@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
@@ -9,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Role } from '../../generated/prisma';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 interface FindAllOptions {
   page?: number;
@@ -24,7 +24,7 @@ export class UsersService {
     const page = Number(options.page) > 0 ? Number(options.page) : 1;
     const limit = Number(options.limit) > 0 ? Number(options.limit) : 10;
     const skip = (page - 1) * limit;
-    const where: any = { deletedAt: null };
+    const where: Record<string, unknown> = { deletedAt: null };
     if (options.search) {
       where.OR = [
         { name: { contains: options.search, mode: 'insensitive' } },
@@ -110,13 +110,13 @@ export class UsersService {
     return rest;
   }
 
-  async update(id: string, updateUserDto: any) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
     // Only allow updating fields that exist in the model
     const allowedFields = ['name', 'email', 'phone', 'notifyEmail', 'notifySms', 'notifyPush'];
-    const data: any = {};
+    const data: Partial<UpdateUserDto> = {};
     for (const key of allowedFields) {
-      if (updateUserDto[key] !== undefined) {
-        data[key] = updateUserDto[key];
+      if ((updateUserDto as Record<string, unknown>)[key] !== undefined) {
+        (data as Record<string, unknown>)[key] = (updateUserDto as Record<string, unknown>)[key];
       }
     }
     try {

@@ -1559,10 +1559,6 @@ export class AdminDashboardComponent implements OnInit {
   viewUser(user: AdminUser) { alert('View user: ' + user.name); }
   editUser(user: AdminUser) { alert('Edit user: ' + user.name); }
   userToDelete: AdminUser | null = null;
-  // Remove senderSearch and recipientSearch
-  // Add custom search function for ng-select
-  // Remove: customUserSearchFn method
-  // Remove senderSearch, recipientSearch, filteredSenderUsers, and filteredRecipientUsers
   senderEmailError: boolean = false;
   recipientEmailError: boolean = false;
   selectedSender: any | null = null;
@@ -1661,7 +1657,7 @@ export class AdminDashboardComponent implements OnInit {
     private adminService: AdminService
   ) {
     this.parcelForm = this.fb.group({
-      recipient: ['', Validators.required], // user ID (from email lookup)
+      recipient: ['', Validators.required], 
       origin: ['', Validators.required],
       destination: ['', Validators.required],
       category: ['', Validators.required],
@@ -1713,7 +1709,7 @@ export class AdminDashboardComponent implements OnInit {
     this.adminService.getParcels().subscribe({
       next: (parcels) => {
         this.recentOrders = parcels;
-        this.filteredOrders = [...parcels]; // Initialize filtered orders
+        this.filteredOrders = [...parcels]; 
       },
       error: (error) => console.error('Error loading parcels:', error)
     });
@@ -1739,7 +1735,7 @@ export class AdminDashboardComponent implements OnInit {
     this.createParcelSuccess = 'Parcel created successfully! 🎉';
     this.createParcelError = '';
     const formValue = this.parcelForm.value;
-    // If selectedSender is not set, try to look up by email
+
     if (!this.selectedSender) {
       const senderEmailInput = (document.getElementById('senderEmail') as HTMLInputElement)?.value;
       if (senderEmailInput) {

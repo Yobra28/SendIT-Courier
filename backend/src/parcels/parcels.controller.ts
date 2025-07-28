@@ -3,6 +3,7 @@ import { ParcelsService } from './parcels.service';
 import { CreateParcelDto } from './dto/create-parcel.dto';
 import { UpdateParcelStatusDto } from './dto/update-parcel-status.dto';
 import { CreateParcelTrackingStepDto } from './dto/create-parcel-tracking-step.dto';
+import { UpdateParcelDto } from './dto/update-parcel.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles/roles.guard';
 import { Roles } from '../common/decorators/roles/roles.decorator';
@@ -112,7 +113,7 @@ export class ParcelsController {
   @Patch(':id')
   async updateParcel(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() body: any
+    @Body() body: UpdateParcelDto
   ) {
     return this.parcelsService.updateParcel(id, body);
   }

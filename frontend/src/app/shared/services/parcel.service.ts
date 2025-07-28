@@ -67,6 +67,19 @@ export class ParcelService {
     );
   }
 
+  getRouteDirections(originLat: number, originLng: number, destLat: number, destLng: number) {
+    // OSRM Routing API (free, no key required)
+    return this.http.get<any>(
+      `https://router.project-osrm.org/route/v1/driving/${originLng},${originLat};${destLng},${destLat}`,
+      {
+        params: {
+          overview: 'full',
+          geometries: 'geojson'
+        }
+      }
+    );
+  }
+
   getAuthHeaders() {
     const token = localStorage.getItem('token');
     return token ? { headers: { Authorization: `Bearer ${token}` } } : {};

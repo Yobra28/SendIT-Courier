@@ -22,16 +22,34 @@ import { CourierNavbarComponent } from './courier-navbar.component';
             <span class="material-icons">local_shipping</span>
             <span>Assigned Parcels</span>
           </div>
+
+          <!-- Search Bar for Parcel by Tracking Number -->
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <input
+              type="text"
+              [(ngModel)]="searchTrackingNumber"
+              placeholder="Search by Tracking Number"
+              class="update-input-modern"
+              style="max-width: 260px;"
+            />
+            <button class="btn-small btn-update-modern" (click)="searchParcelsByTrackingNumber()">
+              <span class="material-icons">search</span> Search
+            </button>
+            <button *ngIf="searchTrackingNumber" class="btn-small btn-geo-modern" (click)="clearSearch()">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
           <div *ngIf="successMessage" class="success-message-modern">{{ successMessage }}</div>
           <div *ngIf="errorMessage" class="error-message-modern">{{ errorMessage }}</div>
           <div *ngIf="loading" class="loading-modern">
             <span class="material-icons spin">autorenew</span> Loading assigned parcels...
           </div>
-          <div *ngIf="!loading && parcels.length === 0" class="empty-modern">
+          <div *ngIf="!loading && filteredParcels.length === 0" class="empty-modern">
             <span class="material-icons">inbox</span>
             <div>No assigned parcels.</div>
           </div>
-          <div *ngIf="!loading && parcels.length > 0" class="table-responsive-modern">
+          <div *ngIf="!loading && filteredParcels.length > 0" class="table-responsive-modern">
             <table class="parcel-table-modern">
               <thead>
                 <tr>
@@ -45,7 +63,7 @@ import { CourierNavbarComponent } from './courier-navbar.component';
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let parcel of parcels">
+                <tr *ngFor="let parcel of filteredParcels">
                   <td class="tracking-cell">{{ parcel.trackingNumber }}</td>
                   <td>{{ parcel.sender }}</td>
                   <td>{{ parcel.recipient }}</td>
@@ -344,6 +362,8 @@ export class CourierDashboardComponent implements OnInit {
   loading = true;
   successMessage = '';
   errorMessage = '';
+  searchTrackingNumber: string = '';
+  filteredParcels: any[] = [];
 
   constructor(private http: HttpClient, private parcelService: ParcelService) {}
 
@@ -355,17 +375,38 @@ export class CourierDashboardComponent implements OnInit {
     this.loading = true;
     this.parcelService.getAssignedParcels().subscribe({
       next: (res: any) => {
-        // If res.data exists and is an array, use it; otherwise, use res directly
         const parcels = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
         this.parcels = parcels.map((p: any) => ({ ...p, newStatus: p.status, newLocation: '', newLat: '', newLng: '' }));
+        this.applySearchFilter();
         this.loading = false;
       },
       error: (err) => {
         this.parcels = [];
+        this.filteredParcels = [];
         this.loading = false;
         alert('Failed to fetch assigned parcels: ' + (err.error?.message || err.statusText));
       }
     });
+  }
+
+  searchParcelsByTrackingNumber() {
+    this.applySearchFilter();
+  }
+
+  clearSearch() {
+    this.searchTrackingNumber = '';
+    this.applySearchFilter();
+  }
+
+  applySearchFilter() {
+    if (!this.searchTrackingNumber) {
+      this.filteredParcels = this.parcels;
+    } else {
+      const search = this.searchTrackingNumber.trim().toLowerCase();
+      this.filteredParcels = this.parcels.filter(parcel =>
+        parcel.trackingNumber && parcel.trackingNumber.toLowerCase().includes(search)
+      );
+    }
   }
 
   updateParcel(parcel: any) {

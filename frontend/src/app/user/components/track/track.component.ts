@@ -13,6 +13,19 @@ interface TrackingStep {
   location: string;
   timestamp: Date;
   completed: boolean;
+  lat?: number;
+  lng?: number;
+}
+
+interface TrackingResult {
+  recipient: string;
+  destination: string;
+  origin: string;
+  trackingNumber: string;
+  status: string;
+  steps: TrackingStep[];
+  currentLat?: number;
+  currentLng?: number;
 }
 
 @Component({
@@ -128,14 +141,13 @@ interface TrackingStep {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 2rem;
+      gap: 5rem;
       margin-bottom: 0.5rem;
     }
     .header-center {
+      font-size: 12px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      flex: 1 1 auto;
     }
     .header-center h1 {
       margin: 0;
@@ -362,22 +374,23 @@ interface TrackingStep {
     }
 
     .back-btn {
-      margin-bottom: 1.5rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 1rem;
-      color: #2563eb;
-      border: 1px solid #2563eb;
-      background: #fff;
-      border-radius: 8px;
-      padding: 0.4rem 1.1rem;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
+  margin-bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1rem;
+  background-color: #2563eb; /* ✅ Blue background */
+  color: #fff;               /* ✅ White text */
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  padding: 0.4rem 1.1rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
     .back-btn:hover {
-      background: #2563eb;
-      color: #fff;
+      background: #ffffffff;
+      color: #155cf7ff;
     }
     .back-btn .material-icons {
       font-size: 1.1rem;
@@ -406,12 +419,12 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
   trackingNumber = '';
   isLoading = false;
   showNoResult = false;
-  trackingResult: any = null;
+  trackingResult: TrackingResult | null = null;
   private leafletMap: L.Map | null = null;
   private leafletPolyline: L.Polyline | null = null;
   private leafletMarkers: L.Marker[] = [];
   private mapInitialized = false;
-  pollingInterval: any = null;
+  pollingInterval: ReturnType<typeof setInterval> | null = null;
   // Remove isAdmin, newStep, isAddingStep, addTrackingStep
 
   constructor(
@@ -429,7 +442,7 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    // this.renderLeafletMap(); // Removed as per edit hint
+  
   }
 
   ngOnInit() {
@@ -440,7 +453,7 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
       if (this.trackingNumber) {
         this.trackParcel();
       }
-    }, 10000);
+    }, 50000);
   }
 
   ngOnDestroy() {
@@ -468,15 +481,39 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
     const originCoords: [number, number] = [parseFloat(originRes[0].lat), parseFloat(originRes[0].lon)];
     const destCoords: [number, number] = [parseFloat(destRes[0].lat), parseFloat(destRes[0].lon)];
     let currentCoords: [number, number] | null = null;
-    if (this.trackingResult?.currentLat && this.trackingResult?.currentLng) {
-      currentCoords = [this.trackingResult.currentLat, this.trackingResult.currentLng];
+    if (this.trackingResult?.currentLat !== undefined && this.trackingResult?.currentLng !== undefined) {
+      currentCoords = [this.trackingResult.currentLat ?? 0, this.trackingResult.currentLng ?? 0];
     } else {
-      // Try to use latest step with lat/lng
-      const latestStep = this.trackingResult?.steps?.slice().reverse().find((s: any) => s.lat && s.lng);
+      const latestStep = this.trackingResult?.steps?.slice().reverse().find((s) => s.lat !== undefined && s.lng !== undefined);
       if (latestStep) {
-        currentCoords = [latestStep.lat, latestStep.lng];
+        currentCoords = [latestStep.lat ?? 0, latestStep.lng ?? 0];
       }
     }
+
+    // Get the actual road route between origin and destination
+    let routeCoordinates: [number, number][] = [];
+    try {
+      const routeResponse = await this.parcelService.getRouteDirections(
+        originCoords[0], originCoords[1], 
+        destCoords[0], destCoords[1]
+      ).toPromise();
+      
+      if (routeResponse && routeResponse.routes && routeResponse.routes.length > 0) {
+        // Extract coordinates from the GeoJSON route
+        routeCoordinates = routeResponse.routes[0].geometry.coordinates.map((coord: number[]) => 
+          [coord[1], coord[0]] // OSRM returns [lng, lat], Leaflet expects [lat, lng]
+        );
+      }
+    } catch (error) {
+      console.warn('Failed to get route directions, falling back to direct line');
+      routeCoordinates = [originCoords, destCoords];
+    }
+
+    // If routing failed, fall back to direct line
+    if (routeCoordinates.length === 0) {
+      routeCoordinates = [originCoords, destCoords];
+    }
+
     setTimeout(() => {
       if (this.leafletMap) {
         this.leafletMap.remove();
@@ -493,8 +530,15 @@ export class TrackComponent implements AfterViewInit, OnDestroy {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
       }).addTo(this.leafletMap);
-      // Draw polyline from origin to destination
-      this.leafletPolyline = L.polyline([originCoords, destCoords], { color: '#2563eb', weight: 4 }).addTo(this.leafletMap);
+      
+      // Draw the actual road route instead of direct line
+      this.leafletPolyline = L.polyline(routeCoordinates, { 
+        color: '#2563eb', 
+        weight: 4,
+        opacity: 0.8,
+        dashArray: '10, 5'
+      }).addTo(this.leafletMap);
+      
       // Add markers for origin, destination, and current location
       L.marker(originCoords, {
         title: 'Origin',

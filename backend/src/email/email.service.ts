@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { PrismaService } from '../prisma/prisma.service';
+import { ParcelWithRelations } from '../parcels/parcels.service';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -18,6 +19,48 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
+
+// Email template data interfaces
+export interface StatusUpdateData {
+  id?: string;
+  status: string;
+  year?: number;
+  trackingNumber?: string;
+  name?: string;
+  estimatedDelivery?: string;
+  price?: number;
+  destination?: string;
+  recipient?: string;
+}
+
+export interface ParcelCreatedData {
+  trackingNumber: string;
+  pickupLocation?: string;
+  destination: string;
+  receiverName?: string;
+  receiverPhone?: string;
+  receiverEmail?: string;
+  year: number;
+  name?: string;
+  status?: string;
+  estimatedDelivery?: string;
+  price?: number;
+  courierName?: string;
+  courierPhone?: string;
+  courierEmail?: string;
+  recipient?: string;
+}
+
+export interface CourierAssignedData {
+  courierName: string;
+  trackingNumber: string;
+  pickupLocation: string;
+  destination: string;
+  receiverName: string;
+  receiverPhone: string;
+  receiverEmail: string;
+  year: number;
+}
 
 @Injectable()
 export class EmailService {
@@ -40,7 +83,7 @@ export class EmailService {
     });
   }
 
-  async sendStatusUpdateEmail(email: string, parcel: any) {
+  async sendStatusUpdateEmail(email: string, parcel: ParcelWithRelations) {
     let templatePath = path.join(__dirname, 'templates', 'status-update.hbs');
     if (!fs.existsSync(templatePath)) {
       templatePath = path.join(process.cwd(), 'src', 'email', 'templates', 'status-update.hbs');
@@ -111,7 +154,7 @@ export class EmailService {
     });
   }
 
-  async sendParcelCreatedReceiver(email: string, data: any) {
+  async sendParcelCreatedReceiver(email: string, data: ParcelCreatedData) {
     let templatePath = path.join(__dirname, 'templates', 'parcel-created-receiver.hbs');
     if (!fs.existsSync(templatePath)) {
       templatePath = path.join(process.cwd(), 'src', 'email', 'templates', 'parcel-created-receiver.hbs');
@@ -128,7 +171,7 @@ export class EmailService {
     });
   }
 
-  async sendParcelCreatedSender(email: string, data: any) {
+  async sendParcelCreatedSender(email: string, data: ParcelCreatedData) {
     let templatePath = path.join(__dirname, 'templates', 'parcel-created-sender.hbs');
     if (!fs.existsSync(templatePath)) {
       templatePath = path.join(process.cwd(), 'src', 'email', 'templates', 'parcel-created-sender.hbs');
@@ -145,7 +188,7 @@ export class EmailService {
     });
   }
 
-  async sendStatusUpdateReceiver(email: string, data: any) {
+  async sendStatusUpdateReceiver(email: string, data: StatusUpdateData) {
     let templatePath = path.join(__dirname, 'templates', 'status-update.hbs');
     if (!fs.existsSync(templatePath)) {
       templatePath = path.join(process.cwd(), 'src', 'email', 'templates', 'status-update.hbs');
@@ -162,7 +205,7 @@ export class EmailService {
     });
   }
 
-  async sendStatusUpdateSender(email: string, data: any) {
+  async sendStatusUpdateSender(email: string, data: StatusUpdateData) {
     let templatePath = path.join(__dirname, 'templates', 'status-update.hbs');
     if (!fs.existsSync(templatePath)) {
       templatePath = path.join(process.cwd(), 'src', 'email', 'templates', 'status-update.hbs');
@@ -179,7 +222,7 @@ export class EmailService {
     });
   }
 
-  async sendCourierAssignedEmail(email: string, data: any) {
+  async sendCourierAssignedEmail(email: string, data: CourierAssignedData) {
     let templatePath = path.join(__dirname, 'templates', 'courier-assigned.hbs');
     if (!fs.existsSync(templatePath)) {
       templatePath = path.join(process.cwd(), 'src', 'email', 'templates', 'courier-assigned.hbs');

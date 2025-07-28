@@ -22,6 +22,31 @@ interface RecentParcel {
   destinationCoords?: { lat: number, lng: number };
 }
 
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  [key: string]: any;
+}
+
+interface UserHistoryEvent {
+  date: string;
+  action: string;
+  details: string;
+}
+
+interface TrackingStep {
+  status: string;
+  description: string;
+  location: string;
+  timestamp: Date;
+  completed: boolean;
+  lat?: number;
+  lng?: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -255,15 +280,15 @@ export class DashboardComponent implements OnInit {
   modalOpen = false;
   selectedParcel: RecentParcel | null = null;
   mapModalOpen = false;
-  mapInstance: any = null;
+  mapInstance: L.Map | null = null;
   mapLocation: { lat: number, lng: number } | null = null;
 
   // Modal state for history and support
   historyModalOpen = false;
   supportModalOpen = false;
 
-  userProfile: any = null;
-  userHistory: any[] = [];
+  userProfile: UserProfile | null = null;
+  userHistory: UserHistoryEvent[] = [];
 
   // Support form state
   supportForm = {
@@ -273,9 +298,9 @@ export class DashboardComponent implements OnInit {
   };
   supportFormSubmitted = false;
 
-  pollingInterval: any = null;
+  pollingInterval: ReturnType<typeof setInterval> | null = null;
 
-  trackingSteps: any[] = [];
+  trackingSteps: TrackingStep[] = [];
   trackingLoading = false;
   trackingError: string | null = null;
 
@@ -294,7 +319,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchAllData();
-    this.pollingInterval = setInterval(() => this.fetchAllData(), 10000);
+    this.pollingInterval = setInterval(() => this.fetchAllData(), 50000);
   }
 
   ngOnDestroy(): void {
@@ -311,7 +336,7 @@ export class DashboardComponent implements OnInit {
 
     // Fetch user profile for support form and history
     this.userService.getProfile().subscribe({
-      next: (user: any) => {
+      next: (user: UserProfile) => {
         this.userProfile = user;
         this.supportForm.name = user.name || '';
         this.supportForm.email = user.email || '';
@@ -380,7 +405,7 @@ export class DashboardComponent implements OnInit {
 
   updateUserHistory() {
     // Combine sent and received parcels for history
-    const events: any[] = [];
+    const events: UserHistoryEvent[] = [];
     this.sentParcels.forEach((p) => {
       events.push({
         date: p.createdAt.toLocaleDateString(),

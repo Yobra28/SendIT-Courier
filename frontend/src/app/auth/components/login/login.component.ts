@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
 
@@ -317,7 +317,7 @@ export class LoginComponent {
     this.loginError = '';
   }
 
-  onLogin(form: any) {
+  onLogin(form: NgForm) {
     if (form.valid) {
       this.isLoading = true;
       this.loginError = '';

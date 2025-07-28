@@ -10,13 +10,41 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { CreateParcelDto } from './dto/create-parcel.dto';
-import { ParcelStatus } from '@prisma/client';
+import { CreateParcelTrackingStepDto } from './dto/create-parcel-tracking-step.dto';
+import { UpdateParcelDto } from './dto/update-parcel.dto';
+import { ParcelStatus, Prisma } from '@prisma/client';
 import fetch from 'node-fetch';
 
 interface ParcelListOptions {
   page?: number;
   limit?: number;
   search?: string;
+}
+
+export interface ParcelWithRelations {
+  id: string;
+  sender?: { name: string } | null;
+  receiver?: { name: string } | null;
+  courier?: { name: string } | null;
+  pickupLocation: string;
+  destination: string;
+  status: string;
+  createdAt: Date;
+  trackingNumber: string;
+  pricing: number;
+  estimatedDelivery?: Date | null;
+  currentLat?: number | null;
+  currentLng?: number | null;
+}
+
+type ParcelWhereCondition = Prisma.ParcelWhereInput;
+
+interface TrackingStep {
+  status: string;
+  location: string;
+  lat: number;
+  lng: number;
+  timestamp: Date;
 }
 
 @Injectable()
@@ -139,12 +167,11 @@ export class ParcelsService {
     const page = Number(options.page) > 0 ? Number(options.page) : 1;
     const limit = Number(options.limit) > 0 ? Number(options.limit) : 10;
     const skip = (page - 1) * limit;
-    const where: any = { senderId: userId, deletedAt: null };
+    const where: ParcelWhereCondition = { senderId: userId, deletedAt: null };
     if (options.search) {
       where.OR = [
         { pickupLocation: { contains: options.search, mode: 'insensitive' } },
         { destination: { contains: options.search, mode: 'insensitive' } },
-        { status: { contains: options.search, mode: 'insensitive' } },
       ];
     }
     const [parcels, total] = await Promise.all([
@@ -166,12 +193,11 @@ export class ParcelsService {
     const page = Number(options.page) > 0 ? Number(options.page) : 1;
     const limit = Number(options.limit) > 0 ? Number(options.limit) : 10;
     const skip = (page - 1) * limit;
-    const where: any = { receiverId: userId, deletedAt: null };
+    const where: ParcelWhereCondition = { receiverId: userId, deletedAt: null };
     if (options.search) {
       where.OR = [
         { pickupLocation: { contains: options.search, mode: 'insensitive' } },
         { destination: { contains: options.search, mode: 'insensitive' } },
-        { status: { contains: options.search, mode: 'insensitive' } },
       ];
     }
     const [parcels, total] = await Promise.all([
@@ -295,7 +321,7 @@ export class ParcelsService {
       ...this.toParcelOrder(parcel),
       origin: parcel.pickupLocation,
       destination: parcel.destination,
-      steps: parcel.trackingSteps.map((step: any) => ({
+      steps: parcel.trackingSteps.map((step: TrackingStep) => ({
         status: step.status,
         description: `Status: ${step.status}`,
         location: step.location,
@@ -307,7 +333,7 @@ export class ParcelsService {
     };
   }
 
-  async addTrackingStep(parcelId: string, dto: any) {
+  async addTrackingStep(parcelId: string, dto: CreateParcelTrackingStepDto) {
     const step = await this.prisma.parcelTrackingStep.create({
       data: {
         parcelId,
@@ -325,7 +351,7 @@ export class ParcelsService {
     const page = Number(options.page) > 0 ? Number(options.page) : 1;
     const limit = Number(options.limit) > 0 ? Number(options.limit) : 10;
     const skip = (page - 1) * limit;
-    const where: any = { courierId, deletedAt: null };
+    const where: ParcelWhereCondition = { courierId, deletedAt: null };
     const [parcels, total] = await Promise.all([
       this.prisma.parcel.findMany({ where, skip, take: limit, include: { sender: true, receiver: true } }),
       this.prisma.parcel.count({ where }),
@@ -370,15 +396,22 @@ export class ParcelsService {
     });
   }
 
-  async updateParcel(id: string, data: any) {
+  async updateParcel(id: string, data: UpdateParcelDto) {
     // Only allow updating certain fields
-    const updateData: any = {};
+    const updateData: Partial<{
+      pickupLocation: string;
+      destination: string;
+      pricing: number;
+      estimatedDelivery: string;
+      courierId: string;
+    }> = {};
+    
     if (data.origin || data.pickupLocation) updateData.pickupLocation = data.origin || data.pickupLocation;
     if (data.destination) updateData.destination = data.destination;
     if (data.pricing) updateData.pricing = Number(data.pricing);
     if (data.estimatedDelivery) updateData.estimatedDelivery = data.estimatedDelivery;
     if (data.courierId) updateData.courierId = data.courierId;
-    // Add more fields as needed
+    
     const parcel = await this.prisma.parcel.update({
       where: { id },
       data: updateData,
@@ -403,7 +436,7 @@ export class ParcelsService {
   }
 
   // Helper to map DB parcel to ParcelOrder shape
-  toParcelOrder(parcel: any) {
+  toParcelOrder(parcel: ParcelWithRelations) {
     return {
       id: parcel.id,
       sender: parcel.sender?.name || '',

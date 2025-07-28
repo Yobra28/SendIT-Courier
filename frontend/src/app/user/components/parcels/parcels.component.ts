@@ -392,31 +392,33 @@ export class ParcelsComponent implements OnInit {
 
   ngOnInit(): void {
     // Fetch both sent and received parcels and merge them
-    this.parcelService.getSentParcels().subscribe((sent: any) => {
-      const sentParcels = (sent.data || sent).map((p: any) => ({
+    this.parcelService.getSentParcels().subscribe((sent: { data?: Parcel[] } | Parcel[]) => {
+      const sentParcels = (sent as any).data || sent;
+      const mappedSent = (sentParcels as Parcel[]).map((p) => ({
         id: p.id,
         recipient: p.recipient,
         destination: p.destination,
         status: p.status,
         weight: p.weight || 0,
-        price: p.pricing,
+        price: p.price,
         trackingNumber: p.trackingNumber,
         createdAt: new Date(p.createdAt),
         estimatedDelivery: new Date(p.createdAt),
       }));
-      this.parcelService.getReceivedParcels().subscribe((received: any) => {
-        const receivedParcels = (received.data || received).map((p: any) => ({
+      this.parcelService.getReceivedParcels().subscribe((received: { data?: Parcel[] } | Parcel[]) => {
+        const receivedParcels = (received as any).data || received;
+        const mappedReceived = (receivedParcels as Parcel[]).map((p) => ({
           id: p.id,
           recipient: p.recipient,
           destination: p.destination,
           status: p.status,
           weight: p.weight || 0,
-          price: p.pricing,
+          price: p.price,
           trackingNumber: p.trackingNumber,
           createdAt: new Date(p.createdAt),
           estimatedDelivery: new Date(p.createdAt),
         }));
-        this.parcels = [...sentParcels, ...receivedParcels];
+        this.parcels = [...mappedSent, ...mappedReceived];
         this.filterParcels();
       });
     });
