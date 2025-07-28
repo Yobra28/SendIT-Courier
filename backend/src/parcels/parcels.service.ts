@@ -80,7 +80,7 @@ export class ParcelsService {
   async geocodeAddress(address: string): Promise<{ lat: number, lng: number } | null> {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
     try {
-      const results = await fetch(url).then(res => res.json());
+      const results = await fetch(url).then(res => res.json()) as any[];
       if (results && results.length > 0) {
         return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
       }

@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { IsString, IsNotEmpty, IsEmail, MinLength, IsEnum } from 'class-validator';
-import { Role } from '../../../generated/prisma';
+import { Role } from '@prisma/client';
 import { RegisterDtoInterface } from '../interfaces/auth-interfaces';
 
 export class RegisterDto implements RegisterDtoInterface {
