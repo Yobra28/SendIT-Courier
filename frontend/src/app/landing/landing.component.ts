@@ -1375,6 +1375,11 @@ export class LandingComponent {
   }
 
   handleRegistrationSuccess() {
+    // Close the register modal
+    this.showRegisterModal = false;
+    // Open the login modal
+    this.showLoginModal = true;
+    // Show success message
     this.showRegistrationSuccess = true;
     setTimeout(() => {
       this.showRegistrationSuccess = false;
