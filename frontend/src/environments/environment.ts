@@ -5,7 +5,7 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000/api'
+  apiUrl: 'https://sendit-courier-7847.onrender.com/api'
 };
 
 console.log('🔍 DEVELOPMENT Environment loaded:', environment);
