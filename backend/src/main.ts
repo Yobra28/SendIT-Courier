@@ -8,7 +8,7 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: ['http://localhost:4200', 'https://send-it-courier.vercel.app','https://send-it-courier-al7omd7cz-brians-projects-fab8afb1.vercel.app'],
+    origin: ['http://localhost:4200', 'https://send-it-courier.vercel.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

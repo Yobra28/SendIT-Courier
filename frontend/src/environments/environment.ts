@@ -1,10 +1,5 @@
 export const environment = {
-  production: false,
+  production: true,
   apiUrl: 'https://sendit-courier-7847.onrender.com/api'
 };
 
-console.log('🔍 DEVELOPMENT Environment loaded:', environment);
-console.log('🔍 API URL:', environment.apiUrl);
-console.log('🔍 Production flag:', environment.production);
-console.log('🔍 Environment file loaded at:', new Date().toISOString());
-console.log('🔍 FORCED PRODUCTION URL - NO LOCALHOST'); 
