@@ -5,58 +5,58 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ParcelService {
-  private baseUrl = `${environment.apiUrl}/parcels`;
+  private apiUrl = `${environment.apiUrl}/parcels`;
 
   constructor(private http: HttpClient) {
     console.log('🔍 ParcelService - Environment API URL:', environment.apiUrl);
-    console.log('🔍 ParcelService - Base URL:', this.baseUrl);
+    console.log('🔍 ParcelService - Base URL:', this.apiUrl);
     console.log('🔍 ParcelService - Using Environment URL');
   }
 
   getParcels() {
-    return this.http.get(this.baseUrl);
+    return this.http.get(this.apiUrl);
   }
 
   getSentParcels() {
-    console.log('🔍 ParcelService.getSentParcels() - URL:', `${this.baseUrl}/sent`);
-    return this.http.get(`${this.baseUrl}/sent`);
+    console.log('🔍 ParcelService.getSentParcels() - URL:', `${this.apiUrl}/sent`);
+    return this.http.get(`${this.apiUrl}/sent`);
   }
 
   getReceivedParcels() {
-    console.log('🔍 ParcelService.getReceivedParcels() - URL:', `${this.baseUrl}/received`);
-    return this.http.get(`${this.baseUrl}/received`);
+    console.log('🔍 ParcelService.getReceivedParcels() - URL:', `${this.apiUrl}/received`);
+    return this.http.get(`${this.apiUrl}/received`);
   }
 
   getParcel(id: string) {
-    return this.http.get(`${this.baseUrl}/${id}`);
+    return this.http.get(`${this.apiUrl}/${id}`);
   }
 
   getParcelByTrackingNumber(trackingNumber: string) {
-    return this.http.get(`${this.baseUrl}/track/${trackingNumber}`);
+    return this.http.get(`${this.apiUrl}/track/${trackingNumber}`);
   }
 
   createParcel(parcel: any) {
-    return this.http.post(this.baseUrl, parcel);
+    return this.http.post(this.apiUrl, parcel);
   }
 
   updateParcel(id: string, data: any) {
-    return this.http.put(`${this.baseUrl}/${id}`, data);
+    return this.http.put(`${this.apiUrl}/${id}`, data);
   }
 
   deleteParcel(id: string) {
-    return this.http.delete(`${this.baseUrl}/${id}`);
+    return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
   updateStatus(parcelId: string, status: string): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/${parcelId}/status`, { status });
+    return this.http.patch(`${this.apiUrl}/${parcelId}/status`, { status });
   }
 
   addTrackingStep(parcelId: string, step: { status: string; location: string; lat?: number; lng?: number }): Observable<any> {
-    return this.http.post(`${this.baseUrl}/${parcelId}/steps`, step);
+    return this.http.post(`${this.apiUrl}/${parcelId}/steps`, step);
   }
 
   updateCurrentLocation(parcelId: string, lat: number, lng: number) {
-    return this.http.patch(`${this.baseUrl}/${parcelId}/location`, { lat, lng });
+    return this.http.patch(`${this.apiUrl}/${parcelId}/location`, { lat, lng });
   }
 
   geocodeAddress(address: string) {
@@ -92,19 +92,19 @@ export class ParcelService {
   }
 
   getAssignedParcels() {
-    return this.http.get(`${this.baseUrl}/assigned`, this.getAuthHeaders());
+    return this.http.get(`${this.apiUrl}/assigned`, this.getAuthHeaders());
   }
 
   getUserNotifications() {
-    console.log('🔍 ParcelService.getUserNotifications() - URL:', `${this.baseUrl}/notifications`);
-    return this.http.get(`${this.baseUrl}/notifications`);
+    console.log('🔍 ParcelService.getUserNotifications() - URL:', `${this.apiUrl}/notifications`);
+    return this.http.get(`${this.apiUrl}/notifications`);
   }
 
   markAllNotificationsRead() {
-    return this.http.patch(`${this.baseUrl}/notifications/read-all`, {});
+    return this.http.patch(`${this.apiUrl}/notifications/read-all`, {});
   }
 
   getTrackingSteps(parcelId: string) {
-    return this.http.get(`${this.baseUrl}/${parcelId}/steps`);
+    return this.http.get(`${this.apiUrl}/${parcelId}/steps`);
   }
 } 
