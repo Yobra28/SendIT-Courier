@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://sendit-courier-7847.onrender.com/api'
+  apiUrl: 'https://send-it-courier.onrender.com/api'
 }; 
