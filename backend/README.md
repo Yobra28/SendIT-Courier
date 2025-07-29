@@ -21,6 +21,10 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
+# SendIT Backend API
+
+A NestJS-based backend API for the SendIT courier management system.
+
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
@@ -59,16 +63,46 @@ $ npm run test:cov
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Render Deployment
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+1. **Build Command**: `npm run build`
+2. **Start Command**: `npm run start:prod`
+3. **Environment Variables**:
+   - `DATABASE_URL`: Your PostgreSQL connection string
+   - `JWT_SECRET`: Your JWT secret key
+   - `PORT`: Port number (Render will set this automatically)
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+### CORS Configuration
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The application is configured to allow requests from:
+- `http://localhost:4200` (local development)
+- `https://send-it-courier.vercel.app`
+- `https://send-it-courier-abbi.vercel.app`
+- Any subdomain of `send-it-courier-*.vercel.app`
+
+### Testing CORS
+
+After deployment, you can test CORS by visiting:
+- `https://your-render-url.onrender.com/api/cors-test`
+
+This should return a JSON response confirming CORS is working.
+
+## Database
+
+The application uses Prisma with PostgreSQL. Make sure to:
+
+1. Run migrations: `npx prisma migrate deploy`
+2. Seed the database: `npm run db:seed`
+
+## API Endpoints
+
+- `GET /api/cors-test` - Test CORS configuration
+- `POST /api/auth/login` - User authentication
+- `GET /api/users/me` - Get current user profile
+- `GET /api/parcels` - Get parcels (requires authentication)
+- `POST /api/parcels` - Create new parcel (requires authentication)
+
+For more detailed API documentation, check the individual controller files.
 
 ## Resources
 

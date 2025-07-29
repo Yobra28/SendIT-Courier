@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Options } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
 
@@ -9,6 +9,16 @@ export class AppController {
     private readonly appService: AppService,
     private readonly prisma: PrismaService,
   ) {}
+
+  @Get('cors-test')
+  async corsTest() {
+    return { message: 'CORS is working!', timestamp: new Date().toISOString() };
+  }
+
+  @Options('cors-test')
+  async corsTestOptions() {
+    return { message: 'CORS preflight successful' };
+  }
 
   @Get('admin/stats')
   async getAdminStats() {
