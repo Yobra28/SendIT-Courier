@@ -1148,6 +1148,7 @@ import { ForgotPasswordComponent } from '../auth/components/forgot-password.comp
       .hero-content {
         grid-template-columns: 1fr;
         text-align: center;
+        gap: 2rem;
       }
 
       .hero-title {
@@ -1157,6 +1158,10 @@ import { ForgotPasswordComponent } from '../auth/components/forgot-password.comp
       .nav-content {
         flex-direction: column;
         gap: 1rem;
+      }
+
+      .nav-links {
+        display: none;
       }
 
       .hero-actions,
@@ -1174,6 +1179,94 @@ import { ForgotPasswordComponent } from '../auth/components/forgot-password.comp
       .contact-grid {
         grid-template-columns: 1fr;
         gap: 2rem;
+      }
+
+      /* Features grid - stack cards vertically */
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .feature-card {
+        padding: 1.5rem;
+      }
+
+      /* Stats grid - stack items vertically */
+      .stats-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .stat-item {
+        padding: 1rem;
+      }
+
+      /* Pricing cards - stack vertically */
+      .pricing-cards {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+      }
+
+      .pricing-card {
+        width: 100%;
+        max-width: 350px;
+        padding: 2rem 1.5rem;
+      }
+
+      /* Footer - stack sections vertically */
+      .footer-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+      }
+
+      /* Modal improvements for small screens */
+      .modal-content {
+        margin: 1rem;
+        padding: 1.5rem;
+        min-width: auto;
+        width: calc(100vw - 2rem);
+        max-height: calc(100vh - 2rem);
+      }
+    }
+
+    /* Additional mobile optimizations */
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+
+      .hero-description {
+        font-size: 1.1rem;
+      }
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .pricing-card {
+        padding: 1.5rem 1rem;
+      }
+
+      .contact-form {
+        padding: 1.5rem;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .delivery-illustration {
+        width: 250px;
+        height: 150px;
+      }
+
+      .truck, .package, .destination {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
       }
     }
   `]

@@ -241,6 +241,7 @@ interface TrackingStep {
     @media (max-width: 1024px) {
       .dashboard-grid {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
       }
     }
 
@@ -249,6 +250,18 @@ interface TrackingStep {
         flex-direction: column;
         gap: 1rem;
         text-align: center;
+      }
+
+      .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      .section-header > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
       }
 
       .parcel-info {
@@ -260,11 +273,51 @@ interface TrackingStep {
       .parcel-status {
         text-align: left;
       }
+
+      .parcel-actions {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+      }
+
+      .action-btn-small {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+      }
+
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .action-btn {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
     }
 
     @media (max-width: 480px) {
       .dashboard-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .dashboard-content {
+        padding: 1rem 0.5rem;
+      }
+
+      .parcels-list {
+        padding: 1rem;
+      }
+
+      .parcel-item {
+        padding: 0.75rem 0;
+      }
+
+      .tracking-number {
+        font-size: 0.7rem;
+      }
+
+      .action-btn-small .material-icons {
+        font-size: 0.9rem;
       }
     }
   `]

@@ -397,8 +397,33 @@ interface TrackingResult {
     }
 
     @media (max-width: 768px) {
+      .track-container {
+        padding: 1rem;
+      }
+
+      .track-header .header-content {
+        padding: 1rem;
+      }
+
+      .header-row {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .back-btn {
+        align-self: center;
+        margin-bottom: 0;
+      }
+
       .input-group {
         flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .input-group .btn {
+        width: 100%;
+        justify-content: center;
       }
 
       .result-header {
@@ -411,6 +436,56 @@ interface TrackingResult {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.25rem;
+      }
+
+      .tracking-timeline {
+        padding: 1rem;
+      }
+
+      .timeline-item {
+        padding: 1rem;
+      }
+
+      .map-container {
+        height: 300px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .track-container {
+        padding: 0.5rem;
+      }
+
+      .track-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .track-header p {
+        font-size: 0.9rem;
+      }
+
+      .tracking-form {
+        padding: 1rem;
+      }
+
+      .tracking-result {
+        padding: 1rem;
+      }
+
+      .timeline-item {
+        padding: 0.75rem;
+      }
+
+      .timeline-content h4 {
+        font-size: 1rem;
+      }
+
+      .timeline-content p {
+        font-size: 0.9rem;
+      }
+
+      .map-container {
+        height: 250px;
       }
     }
   `]

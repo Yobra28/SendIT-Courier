@@ -84,33 +84,51 @@ export class NavbarComponent implements OnInit {
   }
 
   fetchNotifications() {
-    this.parcelService.getUserNotifications().subscribe((data: any) => {
-      this.notifications = data;
+    this.parcelService.getUserNotifications().subscribe({
+      next: (data: any) => {
+        this.notifications = data;
+      },
+      error: (error) => {
+        if (error.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('currentUser');
+          this.router.navigate(['/auth/login']);
+        }
+      }
     });
   }
 
   fetchUserProfile() {
-    this.userService.getProfile().subscribe((user: any) => {
-      this.profileForm = {
-        fullName: user.name,
-        email: user.email,
-        phone: user.phone
-      };
-      this.profileInfo = {
-        initials: user.name ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : '',
-        name: user.name,
-        role: user.role,
-        email: user.email,
-        phone: user.phone,
-        totalPackages: user.totalPackages || 0,
-        memberSince: user.createdAt ? (new Date(user.createdAt)).toLocaleString('default', { month: 'short', year: 'numeric' }) : '',
-      };
-      this.notificationPrefs = {
-        email: user.notifyEmail,
-        sms: user.notifySms,
-        push: user.notifyPush
-      };
-      this.role = user.role || null;
+    this.userService.getProfile().subscribe({
+      next: (user: any) => {
+        this.profileForm = {
+          fullName: user.name,
+          email: user.email,
+          phone: user.phone
+        };
+        this.profileInfo = {
+          initials: user.name ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : '',
+          name: user.name,
+          role: user.role,
+          email: user.email,
+          phone: user.phone,
+          totalPackages: user.totalPackages || 0,
+          memberSince: user.createdAt ? (new Date(user.createdAt)).toLocaleString('default', { month: 'short', year: 'numeric' }) : '',
+        };
+        this.notificationPrefs = {
+          email: user.notifyEmail,
+          sms: user.notifySms,
+          push: user.notifyPush
+        };
+        this.role = user.role || null;
+      },
+      error: (error) => {
+        if (error.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('currentUser');
+          this.router.navigate(['/auth/login']);
+        }
+      }
     });
   }
 

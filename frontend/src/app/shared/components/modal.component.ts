@@ -38,6 +38,46 @@ import { CommonModule } from '@angular/common';
       animation: modalPopIn 0.25s;
       transition: box-shadow 0.2s, border 0.2s;
     }
+
+    /* Mobile responsive modal */
+    @media (max-width: 768px) {
+      .modal-backdrop {
+        padding: 1rem;
+        align-items: flex-start;
+        padding-top: 2rem;
+      }
+      
+      .modal-content {
+        min-width: auto;
+        width: 100%;
+        max-width: none;
+        max-height: calc(100vh - 4rem);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 0;
+      }
+      
+      .modal-close {
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modal-backdrop {
+        padding: 0.5rem;
+        padding-top: 1rem;
+      }
+      
+      .modal-content {
+        padding: 1rem;
+        border-radius: 8px;
+        max-height: calc(100vh - 2rem);
+      }
+    }
     .modal-content:focus {
       outline: none;
       box-shadow: 0 0 0 2px #6366f1;

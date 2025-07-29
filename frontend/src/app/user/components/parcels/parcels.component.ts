@@ -366,20 +366,97 @@ interface Parcel {
     }
 
     @media (max-width: 768px) {
-      .parcels-grid {
-        grid-template-columns: 1fr;
+      .parcels-container {
+        padding: 1rem;
       }
 
-      .parcel-actions {
+      .parcels-header .header-content {
         flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .parcels-header .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .parcels-filters {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .search-bar {
+        width: 100%;
       }
 
       .filter-buttons {
         flex-direction: column;
+        gap: 0.5rem;
       }
 
       .filter-btn {
         width: 100%;
+        padding: 0.75rem;
+      }
+
+      .parcels-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .parcel-card {
+        margin-bottom: 1rem;
+      }
+
+      .parcel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .parcel-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .parcel-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .parcels-container {
+        padding: 0.5rem;
+      }
+
+      .parcels-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .parcels-header p {
+        font-size: 0.9rem;
+      }
+
+      .parcel-details {
+        padding: 1rem;
+      }
+
+      .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+      }
+
+      .parcel-actions {
+        padding: 1rem;
+      }
+
+      .parcel-actions .btn {
+        padding: 0.75rem;
+        font-size: 0.8rem;
       }
     }
   `]

@@ -42,7 +42,7 @@ model User {
   courierParcels  Parcel[]  @relation("CourierParcels")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime? // Soft delete
+  deletedAt       DateTime? 
   resetCode        String?
   resetCodeExpiry  DateTime?
   notifications   Notification[]
@@ -68,12 +68,12 @@ model Parcel {
   trackingNumber String      @unique
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  deletedAt      DateTime?   // Soft delete
+  deletedAt      DateTime?   
   trackingSteps  ParcelTrackingStep[]
   notifications  Notification[]
   estimatedDelivery DateTime?
-  currentLat   Float? // Current latitude for live tracking
-  currentLng   Float? // Current longitude for live tracking
+  currentLat   Float? 
+  currentLng   Float? 
 }
 
 model ParcelTrackingStep {

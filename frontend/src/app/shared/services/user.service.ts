@@ -7,14 +7,9 @@ import { environment } from '../../../environments/environment';
 export class UserService {
   private apiUrl = `${environment.apiUrl}/users`;
 
-  constructor(private http: HttpClient) {
-    console.log('🔍 UserService - Environment API URL:', environment.apiUrl);
-    console.log('🔍 UserService - Base URL:', this.apiUrl);
-    console.log('🔍 UserService - Using Environment URL');
-  }
+  constructor(private http: HttpClient) {}
 
   getProfile(): Observable<any> {
-    console.log('🔍 UserService.getProfile() - URL:', `${this.apiUrl}/me`);
     return this.http.get(`${this.apiUrl}/me`);
   }
 

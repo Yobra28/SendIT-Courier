@@ -336,6 +336,45 @@ import { CourierNavbarComponent } from './courier-navbar.component';
         font-size: 0.95rem;
       }
     }
+    @media (max-width: 768px) {
+      .courier-dashboard-modern {
+        padding: 0.5rem;
+      }
+      .dashboard-header-modern h1 {
+        font-size: 1.75rem;
+      }
+      .dashboard-card-modern {
+        padding: 0.75rem;
+      }
+      .parcel-table-modern {
+        font-size: 0.9rem;
+      }
+      .parcel-table-modern th, .parcel-table-modern td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.85rem;
+      }
+      .update-controls-modern {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+      .update-input-modern, .update-select-modern {
+        width: 100%;
+        min-width: auto;
+        margin-right: 0;
+      }
+      .update-btns-modern {
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      .btn-small {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.9rem;
+      }
+      .material-icons {
+        font-size: 1rem;
+      }
+    }
     @media (max-width: 600px) {
       .courier-dashboard-modern {
         padding: 0.5rem 0.1rem;
@@ -348,11 +387,18 @@ import { CourierNavbarComponent } from './courier-navbar.component';
       }
       .parcel-table-modern th, .parcel-table-modern td {
         padding: 0.4rem 0.1rem;
-        font-size: 0.93rem;
+        font-size: 0.8rem;
       }
       .update-input-modern, .update-select-modern {
-        width: 70px;
+        width: 100%;
+        font-size: 0.85rem;
+      }
+      .tracking-cell {
         font-size: 0.9rem;
+      }
+      .status-badge-modern {
+        font-size: 0.8rem;
+        padding: 0.25em 0.75em;
       }
     }
   `]
