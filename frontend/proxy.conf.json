@@ -1,8 +1,0 @@
-{
-  "/api": {
-    "target": "https://sendit-courier-7847.onrender.com",
-    "secure": true,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-} 
