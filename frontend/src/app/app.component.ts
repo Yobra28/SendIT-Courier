@@ -15,8 +15,11 @@ export class AppComponent {
     console.log('🚀 App Component - Production:', environment.production);
     console.log('🚀 App Component - Build Time:', new Date().toISOString());
     console.log('🚀 App Component - Cache Bust:', Math.random());
+    console.log('🚀 App Component - Window Location:', window.location.href);
+    console.log('🚀 App Component - User Agent:', navigator.userAgent);
     
     // Test API call to verify URL
+    console.log('🚀 App Component - Making test API call to:', `${environment.apiUrl}/users/me`);
     fetch(`${environment.apiUrl}/users/me`, {
       method: 'GET',
       headers: {
@@ -26,6 +29,7 @@ export class AppComponent {
       console.log('✅ Test API call successful:', response.status);
     }).catch(error => {
       console.log('❌ Test API call failed:', error);
+      console.log('❌ Error details:', error.message);
     });
     
     // Force cache invalidation
