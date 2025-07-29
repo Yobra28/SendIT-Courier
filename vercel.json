@@ -4,8 +4,5 @@
       "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
     }
   },
-  "buildCommand": "ng build --configuration production --aot",
-  "env": {
-    "NG_ENV_API_URL": "https://sendit-courier-7847.onrender.com/api"
-  }
+  "buildCommand": "ng build --configuration production --aot"
 } 
