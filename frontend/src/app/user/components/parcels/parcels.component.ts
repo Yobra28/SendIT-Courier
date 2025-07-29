@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParcelService } from '../../../shared/services/parcel.service';
 import { Router } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 
 
 interface Parcel {
@@ -480,7 +481,7 @@ export class ParcelsComponent implements OnInit {
   }
 
   downloadReceipt(parcelId: string): void {
-    fetch(`https://sendit-courier-7847.onrender.com/api/parcels/${parcelId}/receipt`, {
+    fetch(`${environment.apiUrl}/parcels/${parcelId}/receipt`, {
       method: 'GET',
       credentials: 'include', // include cookies if needed for auth
     })

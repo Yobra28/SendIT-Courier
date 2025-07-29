@@ -13,7 +13,7 @@ export interface ContactPayload {
   providedIn: 'root'
 })
 export class ContactService {
-  private readonly apiUrl = 'https://sendit-courier-7847.onrender.com/api/contact';
+  private readonly apiUrl = `${environment.apiUrl}/contact`;
 
   constructor(private http: HttpClient) {}
 

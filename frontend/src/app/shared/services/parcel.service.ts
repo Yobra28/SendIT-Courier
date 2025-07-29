@@ -5,12 +5,12 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ParcelService {
-  private baseUrl = 'https://sendit-courier-7847.onrender.com/api/parcels';
+  private baseUrl = `${environment.apiUrl}/parcels`;
 
   constructor(private http: HttpClient) {
     console.log('🔍 ParcelService - Environment API URL:', environment.apiUrl);
     console.log('🔍 ParcelService - Base URL:', this.baseUrl);
-    console.log('🔍 ParcelService - HARDCODED URL:', this.baseUrl);
+    console.log('🔍 ParcelService - Using Environment URL');
   }
 
   getParcels() {
@@ -101,7 +101,7 @@ export class ParcelService {
   }
 
   markAllNotificationsRead() {
-    return this.http.patch(`https://sendit-courier-7847.onrender.com/api/parcels/notifications/read-all`, {});
+    return this.http.patch(`${this.baseUrl}/notifications/read-all`, {});
   }
 
   getTrackingSteps(parcelId: string) {

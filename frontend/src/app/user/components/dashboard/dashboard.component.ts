@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { ModalComponent } from '../../../shared/components/modal.component';
@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { ParcelService } from '../../../shared/services/parcel.service';
 import { ContactService, ContactPayload } from '../../../shared/services/contact.service';
 import { UserService } from '../../../shared/services/user.service';
+import { environment } from '../../../../environments/environment';
 import * as L from 'leaflet';
 
 
@@ -516,7 +517,7 @@ export class DashboardComponent implements OnInit {
   }
 
   downloadReceipt(parcelId: string): void {
-    fetch(`https://sendit-courier-7847.onrender.com/api/parcels/${parcelId}/receipt`, {
+    fetch(`${environment.apiUrl}/parcels/${parcelId}/receipt`, {
       method: 'GET',
       credentials: 'include',
     })

@@ -17,7 +17,7 @@ export class AppComponent {
     console.log('🚀 App Component - Cache Bust:', Math.random());
     
     // Test API call to verify URL
-    fetch('https://sendit-courier-7847.onrender.com/api/users/me', {
+    fetch(`${environment.apiUrl}/users/me`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'https://sendit-courier-7847.onrender.com/api';
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
