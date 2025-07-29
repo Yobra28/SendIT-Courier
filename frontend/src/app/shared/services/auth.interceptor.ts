@@ -5,19 +5,16 @@ import { Observable } from 'rxjs';
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    console.log('🔍 HTTP Request:', req.method, req.url);
-    console.log('🔍 HTTP Headers:', req.headers);
-    
-    const token = localStorage.getItem('token'); // or wherever you store the token
+    const backendUrl = 'https://sendit-courier-7847.onrender.com';
+    const token = localStorage.getItem('token');
 
-    if (token) {
+    // Only add Authorization header for backend API requests
+    if (token && req.url.startsWith(backendUrl)) {
       const cloned = req.clone({
         headers: req.headers.set('Authorization', `Bearer ${token}`)
       });
-      console.log('🔍 HTTP Request with token:', cloned.method, cloned.url);
       return next.handle(cloned);
     } else {
-      console.log('🔍 HTTP Request without token:', req.method, req.url);
       return next.handle(req);
     }
   }
