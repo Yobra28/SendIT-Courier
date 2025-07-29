@@ -8,7 +8,7 @@ import { ParcelService } from '../../../shared/services/parcel.service';
 import { ContactService, ContactPayload } from '../../../shared/services/contact.service';
 import { UserService } from '../../../shared/services/user.service';
 import * as L from 'leaflet';
-import { environment } from '../../../environments/environment';
+
 
 interface RecentParcel {
   id: string;
@@ -516,7 +516,7 @@ export class DashboardComponent implements OnInit {
   }
 
   downloadReceipt(parcelId: string): void {
-    fetch(`${environment.apiUrl}/parcels/${parcelId}/receipt`, {
+    fetch(`https://sendit-courier-7847.onrender.com/api/parcels/${parcelId}/receipt`, {
       method: 'GET',
       credentials: 'include',
     })

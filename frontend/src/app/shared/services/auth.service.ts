@@ -3,9 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
-  private baseUrl = `${environment.apiUrl}/auth`;
+  private baseUrl = 'https://sendit-courier-7847.onrender.com/api/auth';
 
   constructor(private http: HttpClient) {}
 

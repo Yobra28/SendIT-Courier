@@ -3,9 +3,11 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AdminService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = 'https://sendit-courier-7847.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 

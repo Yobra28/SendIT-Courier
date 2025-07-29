@@ -5,11 +5,12 @@ import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private baseUrl = `${environment.apiUrl}/users`;
+  private baseUrl = 'https://sendit-courier-7847.onrender.com/api/users';
 
   constructor(private http: HttpClient) {
     console.log('🔍 UserService - Environment API URL:', environment.apiUrl);
     console.log('🔍 UserService - Base URL:', this.baseUrl);
+    console.log('🔍 UserService - HARDCODED URL:', this.baseUrl);
   }
 
   getProfile(): Observable<any> {
