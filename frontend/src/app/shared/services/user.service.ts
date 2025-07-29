@@ -14,6 +14,7 @@ export class UserService {
   }
 
   getProfile(): Observable<any> {
+    console.log('🔍 UserService.getProfile() - URL:', `${this.baseUrl}/me`);
     return this.http.get(`${this.baseUrl}/me`);
   }
 

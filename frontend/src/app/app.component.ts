@@ -13,6 +13,8 @@ export class AppComponent {
     console.log('🚀 App Component - Environment loaded:', environment);
     console.log('🚀 App Component - API URL:', environment.apiUrl);
     console.log('🚀 App Component - Production:', environment.production);
+    console.log('🚀 App Component - Build Time:', new Date().toISOString());
+    console.log('🚀 App Component - Cache Bust:', Math.random());
     
     // Test API call to verify URL
     fetch('https://sendit-courier-7847.onrender.com/api/users/me', {
@@ -25,5 +27,14 @@ export class AppComponent {
     }).catch(error => {
       console.log('❌ Test API call failed:', error);
     });
+    
+    // Force cache invalidation
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
   }
 }

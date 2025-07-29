@@ -18,10 +18,12 @@ export class ParcelService {
   }
 
   getSentParcels() {
+    console.log('🔍 ParcelService.getSentParcels() - URL:', `${this.baseUrl}/sent`);
     return this.http.get(`${this.baseUrl}/sent`);
   }
 
   getReceivedParcels() {
+    console.log('🔍 ParcelService.getReceivedParcels() - URL:', `${this.baseUrl}/received`);
     return this.http.get(`${this.baseUrl}/received`);
   }
 
@@ -94,6 +96,7 @@ export class ParcelService {
   }
 
   getUserNotifications() {
+    console.log('🔍 ParcelService.getUserNotifications() - URL:', `${this.baseUrl}/notifications`);
     return this.http.get(`${this.baseUrl}/notifications`);
   }
 
