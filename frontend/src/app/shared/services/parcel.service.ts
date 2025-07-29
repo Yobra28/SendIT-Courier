@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ParcelService {
-  private baseUrl = 'http://localhost:3000/api/parcels';
+  private baseUrl = `${environment.apiUrl}/parcels`;
 
   constructor(private http: HttpClient) {}
 
@@ -94,7 +94,7 @@ export class ParcelService {
   }
 
   markAllNotificationsRead() {
-    return this.http.patch('http://localhost:3000/api/parcels/notifications/read-all', {});
+    return this.http.patch(`${environment.apiUrl}/parcels/notifications/read-all`, {});
   }
 
   getTrackingSteps(parcelId: string) {

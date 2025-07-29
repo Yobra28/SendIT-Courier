@@ -8,4 +8,5 @@ export const environment = {
   apiUrl: 'http://localhost:3000/api'
 };
 
-console.log('🔍 Environment loaded:', environment); 
+console.log('🔍 DEVELOPMENT Environment loaded:', environment);
+console.log('🔍 API URL:', environment.apiUrl); 
