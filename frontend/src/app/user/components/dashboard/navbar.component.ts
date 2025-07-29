@@ -92,7 +92,7 @@ export class NavbarComponent implements OnInit {
         if (error.status === 401) {
           localStorage.removeItem('token');
           localStorage.removeItem('currentUser');
-          this.router.navigate(['/auth/login']);
+          this.router.navigate(['/']);
         }
       }
     });
@@ -126,7 +126,7 @@ export class NavbarComponent implements OnInit {
         if (error.status === 401) {
           localStorage.removeItem('token');
           localStorage.removeItem('currentUser');
-          this.router.navigate(['/auth/login']);
+          this.router.navigate(['/']);
         }
       }
     });

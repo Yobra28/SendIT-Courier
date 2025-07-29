@@ -232,6 +232,7 @@ export class RegisterComponent {
   isLoading = false;
   @Input() inModal = false;
   @Output() openLogin = new EventEmitter<void>();
+  @Output() registrationSuccess = new EventEmitter<void>();
   registerError = '';
 
   constructor(
@@ -282,7 +283,10 @@ export class RegisterComponent {
         next: (res) => {
           this.isLoading = false;
           console.log('Register success:', res);
-          this.router.navigate(['/auth/login']);
+          // Emit registration success event
+          this.registrationSuccess.emit();
+          // Route back to landing page instead of standalone login
+          this.router.navigate(['/']);
         },
         error: (err) => {
           this.isLoading = false;

@@ -292,7 +292,7 @@ import { ForgotPasswordComponent } from '../auth/components/forgot-password.comp
       </app-modal>
       <!-- Register Modal -->
       <app-modal [open]="showRegisterModal" (close)="closeModals()">
-        <app-register [inModal]="true" (openLogin)="openLoginModal()"></app-register>
+        <app-register [inModal]="true" (openLogin)="openLoginModal()" (registrationSuccess)="handleRegistrationSuccess()"></app-register>
       </app-modal>
       <!-- Forgot Password Modal -->
       <app-modal [open]="showForgotPasswordModal" (close)="closeModals()">
@@ -344,6 +344,9 @@ import { ForgotPasswordComponent } from '../auth/components/forgot-password.comp
           </div>
       </footer>
       <div *ngIf="loginSuccessMessage" class="global-success-message">{{ loginSuccessMessage }}</div>
+      <div *ngIf="showRegistrationSuccess" class="global-success-message">
+        Registration successful! You can now sign in to your account.
+      </div>
     </div>
   `,
   styles: [`
@@ -1303,6 +1306,7 @@ export class LandingComponent {
   showLoginModal = false;
   showRegisterModal = false;
   showForgotPasswordModal = false;
+  showRegistrationSuccess = false;
 
   openLoginModal() {
     this.showLoginModal = true;
@@ -1323,6 +1327,13 @@ export class LandingComponent {
     this.showLoginModal = false;
     this.showRegisterModal = false;
     this.showForgotPasswordModal = false;
+  }
+
+  showRegistrationSuccessMessage() {
+    this.showRegistrationSuccess = true;
+    setTimeout(() => {
+      this.showRegistrationSuccess = false;
+    }, 5000);
   }
 
   toggleFaq(index: number) {
@@ -1361,6 +1372,13 @@ export class LandingComponent {
     setTimeout(() => {
       this.loginSuccessMessage = '';
     }, 2000);
+  }
+
+  handleRegistrationSuccess() {
+    this.showRegistrationSuccess = true;
+    setTimeout(() => {
+      this.showRegistrationSuccess = false;
+    }, 5000);
   }
 
   isLoggedIn(): boolean {
