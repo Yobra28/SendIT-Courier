@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://sendit-courier-7847.onrender.com/api'
+  apiUrl: process.env['NG_APP_API_URL'] || 'https://sendit-courier-7847.onrender.com/api'
 };
  
