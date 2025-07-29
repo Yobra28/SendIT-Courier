@@ -7,7 +7,10 @@ import { Observable } from 'rxjs';
 export class ParcelService {
   private baseUrl = `${environment.apiUrl}/parcels`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    console.log('🔍 ParcelService - Environment API URL:', environment.apiUrl);
+    console.log('🔍 ParcelService - Base URL:', this.baseUrl);
+  }
 
   getParcels() {
     return this.http.get(this.baseUrl);

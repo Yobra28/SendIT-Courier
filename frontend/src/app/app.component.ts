@@ -1,23 +1,17 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
-  template: `
-    <div class="app-container">
-      <router-outlet></router-outlet>
-    </div>
-  `,
-  styles: [`
-    .app-container {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-  `]
+  imports: [RouterOutlet],
+  template: `<router-outlet></router-outlet>`
 })
 export class AppComponent {
-  title = 'SendIT';
+  constructor() {
+    console.log('🚀 App Component - Environment loaded:', environment);
+    console.log('🚀 App Component - API URL:', environment.apiUrl);
+    console.log('🚀 App Component - Production:', environment.production);
+  }
 }
