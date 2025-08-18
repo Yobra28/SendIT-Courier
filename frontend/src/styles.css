@@ -1,6 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
+/* Tailwind base/styles (keep existing custom CSS) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   /* Primary Colors */
   --primary-50: #eff6ff;
@@ -39,7 +44,10 @@
   --gray-900: #111827;
 
   /* Status Colors */
+  --success-50: #ecfdf5;
+  --success-200: #a7f3d0;
   --success-500: #10b981;
+  --success-600: #059669;
   --warning-500: #f59e0b;
   --error-500: #ef4444;
   --info-500: #3b82f6;

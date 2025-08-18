@@ -1,37 +1,37 @@
 <app-user-navbar></app-user-navbar>
-<div class="dashboard-wrapper" style="margin-top: 2rem;">
+<div class="dashboard-wrapper mt-8 px-4 sm:px-6 lg:px-8">
   <div class="dashboard-container">
     <div class="dashboard-content">
       <div class="dashboard-grid">
         <div class="dashboard-section">
           <div class="section-header" >
             <h2>Recent Parcels</h2>
-            <div>
+            <div class="flex flex-wrap items-center">
               <button 
                 (click)="setParcelTab('sent')" 
                 [class.active]="activeParcelTab === 'sent'"
-                style="margin-right: 0.5rem; padding: 0.4rem 1.2rem; border-radius: 6px; border: 1px solid #2563eb; background: #fff; color: #2563eb; font-weight: 600; cursor: pointer;"
+                class="mr-2 px-4 py-1.5 rounded-md border border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer"
               >
                 Sent
               </button>
               <button 
                 (click)="setParcelTab('received')" 
                 [class.active]="activeParcelTab === 'received'"
-                style="padding: 0.4rem 1.2rem; border-radius: 6px; border: 1px solid #2563eb; background: #fff; color: #2563eb; font-weight: 600; cursor: pointer;"
+                class="px-4 py-1.5 rounded-md border border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer"
               >
                 Received
               </button>
-              <a routerLink="/user/parcels" class="view-all" style="margin-left: 1rem;">View All</a>
+              <a routerLink="/user/parcels" class="view-all ml-4">View All</a>
             </div>
           </div>
           <div class="parcels-list">
             <div *ngIf="activeParcelTab === 'sent'">
-              <div *ngIf="loadingSent" style="text-align:center; color:#2563eb; margin:2rem 0;">
-                <span class="material-icons" style="vertical-align:middle; font-size:2rem;">autorenew</span> Loading sent parcels...
+              <div *ngIf="loadingSent" class="text-center text-blue-600 my-8">
+                <span class="material-icons align-middle text-2xl">autorenew</span> Loading sent parcels...
               </div>
-              <div *ngIf="errorSent" style="color:#dc2626; text-align:center; margin:2rem 0;">{{ errorSent }}</div>
-              <div *ngIf="!loadingSent && !errorSent && sentParcels.length === 0" style="text-align:center; color:#888; margin:2rem 0;">No sent parcels found.</div>
-              <div *ngFor="let parcel of sentParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer;">
+              <div *ngIf="errorSent" class="text-red-600 text-center my-8">{{ errorSent }}</div>
+              <div *ngIf="!loadingSent && !errorSent && sentParcels.length === 0" class="text-center text-gray-500 my-8">No sent parcels found.</div>
+              <div *ngFor="let parcel of sentParcels" class="parcel-item cursor-pointer" (click)="openParcelModal(parcel)">
                 <div class="parcel-info">
                   <div class="parcel-details">
                     <h4>{{ parcel.recipient }}</h4>
@@ -62,14 +62,14 @@
               </div>
             </div>
             <div *ngIf="activeParcelTab === 'received'">
-              <div *ngIf="loadingReceived" style="text-align:center; color:#2563eb; margin:2rem 0;">
-                <span class="material-icons" style="vertical-align:middle; font-size:2rem;">autorenew</span> Loading received parcels...
+              <div *ngIf="loadingReceived" class="text-center text-blue-600 my-8">
+                <span class="material-icons align-middle text-2xl">autorenew</span> Loading received parcels...
               </div>
-              <div *ngIf="errorReceived" style="color:#dc2626; text-align:center; margin:2rem 0;">{{ errorReceived }}</div>
-              <div *ngIf="!loadingReceived && !errorReceived && receivedParcels.length === 0" style="text-align:center; color:#888; margin:2rem 0;">No received parcels found.</div>
-              <div *ngFor="let parcel of receivedParcels" class="parcel-item" (click)="openParcelModal(parcel)" style="cursor:pointer; position:relative;">
+              <div *ngIf="errorReceived" class="text-red-600 text-center my-8">{{ errorReceived }}</div>
+              <div *ngIf="!loadingReceived && !errorReceived && receivedParcels.length === 0" class="text-center text-gray-500 my-8">No received parcels found.</div>
+              <div *ngFor="let parcel of receivedParcels" class="parcel-item cursor-pointer relative" (click)="openParcelModal(parcel)">
                 <ng-container *ngIf="parcel.status && parcel.status.toLowerCase() === 'delivered'">
-                  <span style="position:absolute; top:8px; right:8px; color:#2563eb; font-size:1.5rem; z-index:2;">
+                  <span class="absolute top-2 right-2 text-blue-600 text-xl z-20">
                     <span class="material-icons">done_all</span>
                   </span>
                 </ng-container>
@@ -162,7 +162,8 @@
     </div>
   </div>
   <div *ngIf="userHistory.length; else noHistory">
-    <table style="width: 100%; border-collapse: collapse; background: #f8fafc; border-radius: 10px; overflow: hidden; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;">
+    <div class="overflow-x-auto -mx-2 sm:mx-0">
+      <table class="min-w-[600px]" style="width: 100%; border-collapse: collapse; background: #f8fafc; border-radius: 10px; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;">
       <thead>
         <tr style="background: #e0e7ef; color: #4f46e5;">
           <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 700; font-size: 1.05rem;">
@@ -195,7 +196,8 @@
           </td>
         </tr>
       </tbody>
-    </table>
+      </table>
+    </div>
   </div>
   <ng-template #noHistory>
     <p>No history found.</p>
@@ -252,14 +254,14 @@
 </app-modal> 
 <app-modal [open]="mapModalOpen" (close)="closeMapModal()">
   <h2 style="margin-bottom: 1rem; color: #2563eb;">Parcel Location</h2>
-  <div *ngIf="trackingLoading" style="text-align:center; color:#2563eb; margin:2rem 0;">
-    <span class="material-icons" style="vertical-align:middle; font-size:2rem;">autorenew</span> Loading tracking data...
+  <div *ngIf="trackingLoading" class="text-center text-blue-600 my-8">
+    <span class="material-icons align-middle text-2xl">autorenew</span> Loading tracking data...
   </div>
-  <div *ngIf="trackingError" style="color:#dc2626; text-align:center; margin:2rem 0;">{{ trackingError }}</div>
+  <div *ngIf="trackingError" class="text-red-600 text-center my-8">{{ trackingError }}</div>
   <div *ngIf="!trackingLoading && !trackingError">
-    <div id="parcelMap" style="height: 350px; width: 100%; border-radius: 10px; overflow: hidden;"></div>
-    <div *ngIf="trackingSteps.length > 0" style="margin-top:1rem;">
-      <h4 style="color:#2563eb; margin-bottom:0.5rem;">Tracking Steps</h4>
+    <div id="parcelMap" class="h-[350px] w-full rounded-lg overflow-hidden"></div>
+    <div *ngIf="trackingSteps.length > 0" class="mt-4">
+      <h4 class="text-blue-600 mb-2">Tracking Steps</h4>
       <ul style="list-style:none; padding:0;">
         <li *ngFor="let step of trackingSteps" style="margin-bottom:0.5rem;">
           <span class="material-icons" style="font-size:1rem; vertical-align:middle; color:#6366f1;">location_on</span>

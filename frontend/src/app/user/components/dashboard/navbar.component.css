@@ -7,7 +7,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 8rem;
+  padding: 0.5rem 2rem;
   background: #fff;
   border-radius: 0 0 12px 12px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
@@ -44,8 +44,8 @@
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  margin-left: 2rem;
+  gap: 1.25rem;
+  margin-left: 1rem;
 }
 
 .navbar-link {
@@ -126,7 +126,7 @@
   background: #fff;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   border-radius: 16px;
-  min-width: 350px;
+  min-width: 300px;
   max-width: 95vw;
   max-height: 80vh;
   overflow-y: auto;
@@ -179,7 +179,7 @@
 }
 
 .modal-body {
-  max-height: 320px;
+  max-height: 60vh;
   overflow-y: auto;
   padding: 0.5rem 1.5rem 0.5rem 1.5rem;
 }
@@ -691,3 +691,29 @@
   background: #fbeaea;
   color: #b91c1c;
 } 
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .user-navbar {
+    padding: 0.5rem 1rem;
+  }
+  .logo .material-icons {
+    font-size: 1.6rem;
+  }
+  .logo .brand {
+    font-size: 1.1rem;
+  }
+  .navbar-links {
+    display: none;
+  }
+  .welcome-message {
+    display: none;
+  }
+  .notification-modal {
+    min-width: unset;
+    width: 96vw;
+  }
+  .profile-modal {
+    width: 96vw;
+  }
+}

@@ -1149,8 +1149,8 @@ import { ForgotPasswordComponent } from '../auth/components/forgot-password.comp
 
     @media (max-width: 768px) {
       .hero-content {
+        display: grid;
         grid-template-columns: 1fr;
-        text-align: center;
         gap: 2rem;
       }
 

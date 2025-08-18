@@ -7,6 +7,7 @@ import { AdminService } from '../../../shared/services/admin.service';
 // Remove: import { NgSelectModule } from '@ng-select/ng-select';
 // 1. Add imports for Leaflet and loading state
 import * as L from 'leaflet';
+import { DynamicMessageComponent, MessageConfig } from '../../../shared/components/dynamic-message/dynamic-message.component';
 
 interface AdminStats {
   totalParcels: number;
@@ -48,6 +49,7 @@ interface AdminUser {
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
+    DynamicMessageComponent,
     // Remove: LeafletModule, // Ensure NgSelectModule is included here
   ],
   template: `
@@ -603,6 +605,7 @@ interface AdminUser {
         </div>
       </div>
     </div>
+    <app-dynamic-message *ngIf="showToast && toastConfig" [config]="toastConfig"></app-dynamic-message>
   `,
   styles: [`
     .admin-navbar {
@@ -1637,10 +1640,21 @@ export class AdminDashboardComponent implements OnInit {
         this.showCreateCourierForm = false;
         this.courierForm.reset();
         this.loadUsers && this.loadUsers();
+        this.showToastMsg({
+          type: 'success',
+          title: 'Courier Created',
+          message: 'Courier created successfully!',
+          duration: 2000
+        });
       },
       error: () => {
         this.isCreatingCourier = false;
-        alert('Failed to create courier.');
+        this.showToastMsg({
+          type: 'error',
+          title: 'Courier Creation Failed',
+          message: 'Failed to create courier. Please check all fields and try again.',
+          duration: 2000
+        });
       }
     });
   }
@@ -1649,6 +1663,10 @@ export class AdminDashboardComponent implements OnInit {
   mapLoading: boolean = false;
   mapError: string | null = null;
   mapSteps: any[] = [];
+
+  toastConfig: MessageConfig | null = null;
+  showToast = false;
+  toastTimeout: any = null;
 
   constructor(
     private fb: FormBuilder,
@@ -1732,7 +1750,7 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
     this.isCreating = true;
-    this.createParcelSuccess = 'Parcel created successfully! 🎉';
+    this.createParcelSuccess = '';
     this.createParcelError = '';
     const formValue = this.parcelForm.value;
 
@@ -1747,22 +1765,34 @@ export class AdminDashboardComponent implements OnInit {
           } else {
             this.isCreating = false;
             this.senderEmailError = true;
-            this.createParcelError = 'Sender not found.';
-            console.log('Sender not found');
+            this.showToastMsg({
+              type: 'error',
+              title: 'Sender Not Found',
+              message: 'Sender not found.',
+              duration: 2000
+            });
             return;
           }
         } catch {
           this.isCreating = false;
           this.senderEmailError = true;
-          this.createParcelError = 'Sender not found.';
-          console.log('Sender not found (exception)');
+          this.showToastMsg({
+            type: 'error',
+            title: 'Sender Not Found',
+            message: 'Sender not found.',
+            duration: 2000
+          });
           return;
         }
       } else {
         this.isCreating = false;
         this.senderEmailError = true;
-        this.createParcelError = 'Sender email is required.';
-        console.log('Sender email is required');
+        this.showToastMsg({
+          type: 'error',
+          title: 'Sender Email Required',
+          message: 'Sender email is required.',
+          duration: 2000
+        });
         return;
       }
     }
@@ -1780,21 +1810,28 @@ export class AdminDashboardComponent implements OnInit {
     this.adminService.createParcel(payload).subscribe({
       next: () => {
         this.isCreating = false;
-        this.createParcelSuccess = 'Parcel created successfully! 🎉';
-        this.createParcelError = '';
+        this.showToastMsg({
+          type: 'success',
+          title: 'Parcel Created',
+          message: 'Parcel created successfully! 🎉',
+          duration: 2000
+        });
         setTimeout(() => {
           this.showCreateForm = false;
           this.parcelForm.reset();
           this.selectedSender = null;
-          this.createParcelSuccess = '';
         }, 1200);
         this.loadParcels();
         this.loadStats();
       },
       error: () => {
         this.isCreating = false;
-        this.createParcelError = 'Failed to create parcel. Please check all fields and try again.';
-        console.log('API call failed');
+        this.showToastMsg({
+          type: 'error',
+          title: 'Parcel Creation Failed',
+          message: 'Failed to create parcel. Please check all fields and try again.',
+          duration: 2000
+        });
       }
     });
   }
@@ -1815,15 +1852,13 @@ export class AdminDashboardComponent implements OnInit {
       this.mapLoading = true;
       this.mapError = null;
       this.mapSteps = [];
-      // Remove: setTimeout(() => this.initMap(), 100);
       if (this.mapInstance) {
         this.mapInstance.remove();
         this.mapInstance = null;
       }
       try {
-        // 1. Fetch tracking steps for the parcel
+        
         const steps: any = await this.fetchTrackingSteps(order.id);
-        // 2. Geocode all step locations
         const geocodedSteps = await Promise.all(steps.map(async (step: any) => {
           let coords = null;
           if (step.lat && step.lng) {
@@ -1834,8 +1869,7 @@ export class AdminDashboardComponent implements OnInit {
           return { ...step, coords };
         }));
         this.mapSteps = geocodedSteps.filter(s => s.coords);
-        setTimeout(() => this.renderMap(), 500); // Increased delay for modal rendering
-      } catch (e) {
+        setTimeout(() => this.renderMap(), 500); 
         this.mapError = 'Failed to load tracking steps or map.';
       } finally {
         this.mapLoading = false;
@@ -1843,7 +1877,7 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
-  // Fetch tracking steps from backend (try AdminService, fallback to ParcelService)
+  
   async fetchTrackingSteps(parcelId: string): Promise<any[]> {
     try {
       const res: any = await this.adminService.getParcelTrackingSteps(parcelId).toPromise();
@@ -1868,11 +1902,11 @@ export class AdminDashboardComponent implements OnInit {
     return null;
   }
 
-  // Render the map with all steps
+  
   renderMap() {
     if (!this.mapSteps.length || !this.selectedOrder) return;
     const mapId = `parcelMap-${this.selectedOrder.id}`;
-    // Destroy previous map instance if exists
+    
     if (this.mapInstance) {
       this.mapInstance.remove();
       this.mapInstance = null;
@@ -2030,17 +2064,17 @@ export class AdminDashboardComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  // Show confirmation modal for user deletion
+  
   deleteUser(user: AdminUser) {
     this.userToDelete = user;
   }
 
-  // Cancel user deletion
+  
   cancelUserDelete() {
     this.userToDelete = null;
   }
 
-  // Confirm and delete user
+  
   confirmUserDelete() {
     if (!this.userToDelete) return;
     this.adminService.deleteUser(this.userToDelete.id).subscribe({
@@ -2056,7 +2090,7 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // Search methods
+ 
   filterPackages() {
     if (!this.packageSearchTerm.trim()) {
       this.filteredOrders = [...this.recentOrders];
@@ -2088,5 +2122,15 @@ export class AdminDashboardComponent implements OnInit {
 
   onUserSearchChange() {
     this.filterUsers();
+  }
+
+  showToastMsg(config: MessageConfig) {
+    this.toastConfig = config;
+    this.showToast = true;
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastTimeout = setTimeout(() => {
+      this.showToast = false;
+      this.toastConfig = null;
+    }, config.duration ?? 2000);
   }
 }

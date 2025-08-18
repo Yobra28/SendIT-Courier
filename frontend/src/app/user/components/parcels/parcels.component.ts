@@ -25,13 +25,13 @@ interface Parcel {
   template: `
     <div class="parcels-container">
       <div class="parcels-header">
-        <div class="header-content" style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;">
+        <div class="header-content flex items-center justify-between gap-6">
           <div>
             <h1>My Parcels</h1>
             <p>Track and manage all your parcels</p>
           </div>
-          <button (click)="goToDashboard()" class="btn btn-primary" style="min-width: 180px; display: flex; align-items: center; gap: 0.5rem;">
-            <span class="material-icons" style="vertical-align:middle;">arrow_back</span>
+          <button (click)="goToDashboard()" class="btn btn-primary min-w-[180px] flex items-center gap-2">
+            <span class="material-icons align-middle">arrow_back</span>
             Back to Dashboard
           </button>
         </div>
